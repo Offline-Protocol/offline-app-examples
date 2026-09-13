@@ -1,0 +1,19 @@
+node_modules/
+.turbo/
+.DS_Store
+*.log
+.env*
+!.env.example
+
+# React Native / mobile (apps)
+.expo/
+dist/
+build/
+ios/Pods/
+ios/build/
+android/app/build/
+android/build/
+android/.gradle/
+**/.cxx/
+**/android/local.properties
+*.jsbundle

@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "offline-protocol": {
+      "command": "offline",
+      "args": ["mcp", "serve"]
+    }
+  }
+}
