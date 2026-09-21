@@ -27,6 +27,7 @@ export class Session {
   private lastSeen = 0;
   private started = 0;
   private lastPing = 0;
+  private lastJoinRetry = 0;
   private seq = 0;
   private recovery = false;
   constructor(
@@ -60,15 +61,32 @@ export class Session {
     this.changed();
   }
   connect(peer: string, lobby: string) {
-    if (this.view.phase !== 'browsing') return;
+    if (!this.beginJoin(peer, lobby)) {
+      return;
+    }
+    this.sendJoinOnce();
+  }
+
+  beginJoin(peer: string, lobby: string): boolean {
+    if (this.view.phase !== 'browsing') {
+      return false;
+    }
     this.host = false;
     this.peer = peer;
     this.joinId = this.io.id();
     this.started = this.io.now();
     this.view.phase = 'connecting';
     this.pending = { v: 1, type: 'join', lobby, join: this.joinId };
-    this.send(this.pending);
+    this.lastJoinRetry = 0;
     this.changed();
+    return true;
+  }
+
+  sendJoinOnce() {
+    if (this.view.phase === 'connecting' && this.pending?.type === 'join') {
+      this.send(this.pending);
+      this.lastJoinRetry = this.io.now();
+    }
   }
   hostAccept(peer: string, join: string) {
     if (!this.host || this.view.phase !== 'waiting') return;
@@ -233,8 +251,15 @@ export class Session {
       this.send({ v: 1, type: 'ping', session: this.session, seq: ++this.seq });
       if (this.recovery && this.host) this.send(this.snapshot());
     }
-    if (this.pending && this.view.phase !== 'disconnected')
-      this.send(this.pending);
+    if (this.pending && this.view.phase !== 'disconnected') {
+      if (this.pending.type === 'join' && this.view.phase === 'connecting') {
+        if (now - this.lastJoinRetry >= 15000) {
+          this.sendJoinOnce();
+        }
+      } else {
+        this.send(this.pending);
+      }
+    }
   }
   waitForOpponent() {
     if (!this.view.recoverable) return;

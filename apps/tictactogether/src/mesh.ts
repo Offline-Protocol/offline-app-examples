@@ -9,10 +9,12 @@ import {
   APP_ID,
   DIRECT_LOBBY,
   NEIGHBOR_SETTLE_MS,
+  SERVICE_DISCOVER_MIN_INTERVAL_MS,
   SERVICE_NAME,
 } from './constants';
 import { meshError, meshLog, meshWarn, shortPeer } from './debug';
 import { requestBluetoothPermissions } from './permissions';
+import { awaitMeshEstablishment } from './meshEstablishment';
 import { Session } from './session';
 import { decode, Wire } from './wire';
 
@@ -73,6 +75,9 @@ export class MeshSession {
     return this.localPeer.slice(-6).toUpperCase();
   }
   peerReadyForJoin(peer: string): boolean {
+    if (this.secureSessionPeers.has(peer)) {
+      return true;
+    }
     const seen = this.neighborFirstSeen.get(peer);
     return seen !== undefined && Date.now() - seen >= NEIGHBOR_SETTLE_MS;
   }
@@ -105,6 +110,11 @@ export class MeshSession {
   >();
   private joinTransportEpoch = 0;
   private joinAccepted = false;
+  private joinTransportInFlight = false;
+  /** MLS sessions from autoKeyExchange or explicit establishment (demo-app pattern). */
+  private secureSessionPeers = new Set<string>();
+  private lastServiceDiscoverMs = 0;
+  private discoverRevisionAtLastQuery = -1;
 
   constructor(
     host: boolean,
@@ -207,10 +217,13 @@ export class MeshSession {
           storePending: true,
         },
         reliability: {
+          ack: { defaultTimeoutMs: 10000 },
           retry: {
-            maxRetries: 3,
-            outboxMaxLifetimeMs: 15000,
-            pendingMessageMaxLifetimeMs: 15000,
+            maxRetries: 8,
+            initialDelayMs: 300,
+            maxDelayMs: 5000,
+            outboxMaxLifetimeMs: 180000,
+            pendingMessageMaxLifetimeMs: 180000,
           },
         },
       });
@@ -306,12 +319,18 @@ export class MeshSession {
           !this.session.host &&
           !this.joinAccepted &&
           this.session.view.phase === 'connecting' &&
-          this.ticks % 4 === 0
+          this.ticks % 6 === 0
         ) {
           const peer = this.session.opponentPeer();
           if (peer.startsWith('off1')) {
             void this.resendJoinTransport(peer, this.joinLobby);
           }
+        }
+        if (
+          !this.session.host &&
+          this.session.view.phase === 'browsing'
+        ) {
+          this.maybeInferHostFromNeighbors();
         }
         if (++this.ticks % 3 === 0) {
           if (['browsing', 'waiting'].includes(this.session.view.phase)) {
@@ -345,15 +364,22 @@ export class MeshSession {
 
   private send(peer: string, message: object) {
     const content = JSON.stringify(message);
-    const key = peer + content;
-    if (!this.protocol || this.closing || this.sends.has(key)) {
+    const type = (message as { type?: string }).type;
+    const key =
+      type === 'join' ? `${peer}:join:${Date.now()}` : peer + content;
+    if (!this.protocol || this.closing) {
       return;
     }
-    this.sends.add(key);
+    if (type !== 'join' && this.sends.has(key)) {
+      return;
+    }
+    if (type !== 'join') {
+      this.sends.add(key);
+    }
     void this.protocol
       .sendMessage({ recipient: peer, content, priority: MessagePriority.High })
       .then((messageId) => {
-        meshLog('sendMessage ok', {
+        meshLog('sendMessage queued', {
           to: shortPeer(peer),
           type: (message as { type?: string }).type,
           messageId,
@@ -366,7 +392,11 @@ export class MeshSession {
           error: error instanceof Error ? error.message : String(error),
         });
       })
-      .finally(() => this.sends.delete(key));
+      .finally(() => {
+        if (type !== 'join') {
+          this.sends.delete(key);
+        }
+      });
   }
 
   private stopJoinTransport() {
@@ -374,14 +404,58 @@ export class MeshSession {
     this.joinTransportEpoch++;
   }
 
-  private joinTransportActive(epoch: number, peer: string): boolean {
-    return (
-      !this.closing &&
-      epoch === this.joinTransportEpoch &&
-      !this.joinAccepted &&
-      this.session.view.phase === 'connecting' &&
-      this.session.isOpponent(peer)
+  private noteCanonicalPeer(canonical: string) {
+    this.neighbors.add(canonical);
+    if (!this.neighborFirstSeen.has(canonical)) {
+      this.neighborFirstSeen.set(canonical, Date.now());
+    }
+    this.neighborRevision++;
+  }
+
+  private async primePeerSession(peer: string) {
+    if (!this.protocol || this.closing) {
+      return;
+    }
+    if (await awaitMeshEstablishment(this.protocol, peer)) {
+      this.secureSessionPeers.add(peer);
+    }
+    this.changed();
+  }
+
+  private reconcileCanonicalNeighbor(canonical: string) {
+    this.noteCanonicalPeer(canonical);
+  }
+
+  private maybeInferHostFromNeighbors() {
+    if (this.session.host || this.closing) {
+      return;
+    }
+    const peers = this.nearbyPeers.filter((p) => p.startsWith('off1'));
+    if (peers.length !== 1) {
+      return;
+    }
+    const peer = peers[0];
+    if (!this.peerReadyForJoin(peer) || this.nearby.some((s) => s.peer === peer)) {
+      return;
+    }
+    this.rememberHost(
+      peer,
+      DIRECT_LOBBY,
+      `Host ${peer.slice(-6).toUpperCase()}`,
     );
+    meshLog('inferred host from lone BLE neighbor', { peer: shortPeer(peer) });
+    this.discoveryError = '';
+  }
+
+  private trySendJoinOverSession(peer: string) {
+    if (
+      this.session.view.phase !== 'connecting' ||
+      !this.session.isOpponent(peer) ||
+      !this.secureSessionPeers.has(peer)
+    ) {
+      return;
+    }
+    this.session.sendJoinOnce();
   }
 
   private async sendStateBurst(peer: string) {
@@ -398,128 +472,44 @@ export class MeshSession {
     meshLog('sendStateBurst done', { to: shortPeer(peer) });
   }
 
-  private async sendJoinBurst(
-    peer: string,
-    joinEnvelope: object,
-    epoch: number,
-  ) {
-    if (!this.protocol || !this.joinTransportActive(epoch, peer)) {
-      return;
-    }
-    const content = JSON.stringify(joinEnvelope);
-    for (
-      let attempt = 0;
-      attempt < 3 && this.joinTransportActive(epoch, peer);
-      attempt++
-    ) {
-      try {
-        await this.protocol.sendMessage({
-          recipient: peer,
-          content,
-          priority: MessagePriority.Critical,
-        });
-        meshLog('sendJoinBurst ok', { to: shortPeer(peer), attempt });
-      } catch (error) {
-        meshWarn('sendJoinBurst failed', {
-          to: shortPeer(peer),
-          attempt,
-          error: error instanceof Error ? error.message : String(error),
-        });
-      }
-      await pause(350);
-    }
-  }
-
   private async resendJoinTransport(peer: string, lobby: string) {
     if (
       !this.protocol ||
       this.closing ||
+      this.joinAccepted ||
+      this.joinTransportInFlight ||
       !this.session.isOpponent(peer) ||
       this.session.view.phase !== 'connecting'
     ) {
       return;
     }
-    const epoch = this.joinTransportEpoch;
+    this.joinTransportInFlight = true;
     const joinEnvelope = {
       v: 1 as const,
       type: 'join' as const,
       lobby,
       join: this.session.joinToken,
     };
-    void this.sendJoinBurst(peer, joinEnvelope, epoch);
-    if (!this.joinTransportActive(epoch, peer)) {
-      return;
-    }
     try {
       const keyPackage = await this.localKeyPackage();
-      await this.protocol.sendConnectionRequest({
+      const messageId = await this.protocol.sendConnectionRequest({
         recipient: peer,
         senderName: this.displayName(this.localPeer),
         initialMessage: JSON.stringify(joinEnvelope),
         keyPackage,
       });
+      meshLog('connection request queued', {
+        to: shortPeer(peer),
+        messageId,
+      });
+      this.trySendJoinOverSession(peer);
     } catch (error) {
       meshWarn('resendJoinTransport failed', {
         to: shortPeer(peer),
         error: error instanceof Error ? error.message : String(error),
       });
-    }
-  }
-
-  private promoteVerifiedHost(canonical: string) {
-    if (this.session.host) {
-      return;
-    }
-    for (const peer of [...this.neighbors]) {
-      if (peer !== canonical) {
-        this.neighbors.delete(peer);
-        this.neighborFirstSeen.delete(peer);
-      }
-    }
-    this.neighbors.add(canonical);
-    this.neighborFirstSeen.set(canonical, Date.now());
-    const announcement = this.announcements.get(canonical);
-    this.rememberHost(
-      canonical,
-      announcement?.capabilities.lobby ?? DIRECT_LOBBY,
-      typeof announcement?.capabilities.name === 'string'
-        ? announcement.capabilities.name
-        : `Player ${canonical.slice(-4).toUpperCase()}`,
-    );
-    this.discoveryError =
-      'Verified player — tap Connect when the button is ready.';
-    this.discover();
-  }
-
-  /** Guest join: list settled BLE peers when MeshServices is slow. */
-  private listSettledNeighborsAsPlayers() {
-    if (this.session.host || this.session.view.phase !== 'browsing') {
-      return;
-    }
-    for (const peer of this.nearbyPeers) {
-      if (!peer.startsWith('off1')) {
-        continue;
-      }
-      if (this.nearby.some((s) => s.peer === peer)) {
-        continue;
-      }
-      if (!this.peerReadyForJoin(peer)) {
-        continue;
-      }
-      const announcement = this.announcements.get(peer);
-      if (announcement) {
-        this.rememberHost(
-          peer,
-          announcement.capabilities.lobby,
-          announcement.capabilities.name,
-        );
-      } else {
-        this.rememberHost(
-          peer,
-          DIRECT_LOBBY,
-          `Player ${peer.slice(-4).toUpperCase()}`,
-        );
-      }
+    } finally {
+      this.joinTransportInFlight = false;
     }
   }
 
@@ -615,7 +605,10 @@ export class MeshSession {
       });
       return;
     }
-    const target = this.nearby.find((s) => s.peer === peer);
+    if (!this.ready || this.closing) return;
+    const target = this.nearby.find(
+      (s) => s.peer === peer && Date.now() - s.seen < 20000,
+    );
     if (!target) {
       meshWarn('requestJoin blocked — host not in verified session list', {
         peer: shortPeer(peer),
@@ -655,6 +648,7 @@ export class MeshSession {
       this.changed();
       return;
     }
+    if (this.closing) return;
     const lobby = target.lobby ?? DIRECT_LOBBY;
     this.joinLobby = lobby;
     this.joiningPeer = peer;
@@ -662,38 +656,16 @@ export class MeshSession {
     this.changed();
     this.incomingRequests = [];
     this.joinAccepted = false;
-    this.session.connect(peer, lobby);
-    if (this.session.view.phase !== 'connecting') {
+    if (!this.session.beginJoin(peer, lobby)) {
       meshWarn('requestJoin failed to enter connecting phase');
       this.joiningPeer = '';
       this.changed();
       return;
     }
     try {
-      await this.services.discoverServices(SERVICE_NAME).catch(() => {});
-
-      const joinEnvelope = {
-        v: 1 as const,
-        type: 'join' as const,
-        lobby,
-        join: this.session.joinToken,
-      };
-      const keyPackage = await this.localKeyPackage();
-      meshLog('sendConnectionRequest', {
-        to: shortPeer(peer),
-        lobby,
-        join: joinEnvelope.join,
-        keyPackageBytes: keyPackage?.length ?? 0,
-      });
-      const joinEpoch = this.joinTransportEpoch;
-      void this.sendJoinBurst(peer, joinEnvelope, joinEpoch);
-      const messageId = await this.protocol.sendConnectionRequest({
-        recipient: peer,
-        senderName: this.displayName(this.localPeer),
-        initialMessage: JSON.stringify(joinEnvelope),
-        keyPackage,
-      });
-      meshLog('sendConnectionRequest ok', { to: shortPeer(peer), messageId });
+      this.discoveryError = 'Sending join request…';
+      this.changed();
+      await this.resendJoinTransport(peer, lobby);
     } catch (error) {
       meshError('sendConnectionRequest failed', {
         to: shortPeer(peer),
@@ -763,13 +735,18 @@ export class MeshSession {
           accepterName: this.displayName(this.localPeer),
           keyPackage,
         });
+        if (await awaitMeshEstablishment(this.protocol, peer)) {
+          this.secureSessionPeers.add(peer);
+        }
       } catch (error) {
         meshWarn('acceptConnectionRequest failed — continuing with app join', {
           peer: shortPeer(peer),
           error: error instanceof Error ? error.message : String(error),
         });
       }
-      if (!this.closing) {
+      if (!this.closing && this.session.view.phase === 'waiting') {
+        this.incomingRequests = [];
+        this.discoveryError = '';
         meshLog('hostAccept + publish state', {
           peer: shortPeer(peer),
           joinId,
@@ -852,7 +829,7 @@ export class MeshSession {
         this.announcements.delete(peer);
       }
     }
-    this.listSettledNeighborsAsPlayers();
+    this.maybeInferHostFromNeighbors();
     this.changed();
   }
 
@@ -881,15 +858,18 @@ export class MeshSession {
           }
           if (link.from === topology.local_user_id) {
             this.neighbors.add(link.to);
+            if (!this.neighborFirstSeen.has(link.to)) {
+              this.neighborFirstSeen.set(link.to, Date.now());
+            }
           }
           if (link.to === topology.local_user_id) {
             this.neighbors.add(link.from);
+            if (!this.neighborFirstSeen.has(link.from)) {
+              this.neighborFirstSeen.set(link.from, Date.now());
+            }
           }
         }
         this.neighbors.delete(topology.local_user_id);
-        for (const peer of this.neighbors)
-          if (!this.neighborFirstSeen.has(peer))
-            this.neighborFirstSeen.set(peer, Date.now());
         this.updateNeighbors();
       }
     } catch {
@@ -898,12 +878,19 @@ export class MeshSession {
       }
     }
     if (this.closing || this.session.host) {
-      if (!this.closing) {
-        this.changed();
-      }
       return;
     }
-
+    const now = Date.now();
+    const neighborChanged =
+      this.neighborRevision !== this.discoverRevisionAtLastQuery;
+    if (
+      !neighborChanged &&
+      now - this.lastServiceDiscoverMs < SERVICE_DISCOVER_MIN_INTERVAL_MS
+    ) {
+      return;
+    }
+    this.lastServiceDiscoverMs = now;
+    this.discoverRevisionAtLastQuery = this.neighborRevision;
     try {
       meshLog('discoverServices', {
         service: SERVICE_NAME,
@@ -913,7 +900,7 @@ export class MeshSession {
     } catch {
       if (!this.closing) {
         this.discoveryError =
-          'Still looking. Keep both apps open and move a little closer.';
+          'Host discovery is retrying. Keep both apps open.';
       }
     }
 
@@ -931,6 +918,9 @@ export class MeshSession {
       'connection_accepted',
       'connection_rejected',
       'connection_request_undeliverable',
+      'secure_session_established',
+      'secure_session_failed',
+      'service_discovered',
       'message_received',
       'message_failed',
       'identity_ready',
@@ -963,7 +953,14 @@ export class MeshSession {
         this.nearby = this.nearby.map((s) =>
           s.peer === event.peer_id ? { ...s, reachable: true } : s,
         );
-        if (this.ready) {
+        if (
+          this.session.host &&
+          this.session.view.phase === 'waiting' &&
+          event.peer_id.startsWith('off1')
+        ) {
+          void this.primePeerSession(event.peer_id);
+        }
+        if (this.ready && !this.session.host) {
           this.discover();
         }
         break;
@@ -971,9 +968,8 @@ export class MeshSession {
         meshLog('neighbor_lost', { peer: shortPeer(event.peer_id) });
         this.neighborRevision++;
         this.neighbors.delete(event.peer_id);
-        if (this.session.isOpponent(event.peer_id)) {
-          this.session.disconnect('Opponent disconnected');
-        }
+        this.neighborFirstSeen.delete(event.peer_id);
+        // BLE links flap while connecting. Session traffic/timeout decides liveness.
         this.nearby = this.nearby.map((s) =>
           s.peer === event.peer_id ? { ...s, reachable: false } : s,
         );
@@ -986,6 +982,13 @@ export class MeshSession {
           event.hop_count > 2 ||
           !/^[a-zA-Z0-9-]{1,80}$/.test(lobby)
         ) {
+          meshLog('service_discovered ignored', {
+            service: event.service_id,
+            version: event.version,
+            hops: event.hop_count,
+            lobby,
+            provider: shortPeer(event.provider_peer_id),
+          });
           return;
         }
         if (!this.neighbors.has(event.provider_peer_id)) {
@@ -1022,11 +1025,17 @@ export class MeshSession {
           event.reason_code === 'TRANSPORT_IDENTITY_MISMATCH' &&
           event.peer_id.startsWith('off1')
         ) {
-          this.promoteVerifiedHost(event.peer_id);
+          this.secureSessionPeers.delete(event.peer_id);
+          this.discoveryError =
+            'Bluetooth identity mismatch. Close and reopen the app on both phones, then host and join again.';
         }
         break;
       }
       case 'connection_request_received': {
+        meshLog('connection_request_received', {
+          host: this.session.host,
+          phase: this.session.view.phase,
+        });
         this.resolveCrossedJoin(event.sender);
         if (!this.session.host) {
           return;
@@ -1058,6 +1067,12 @@ export class MeshSession {
         const parsed = this.parseJoinMessage(
           this.connectionInitialMessage(event),
         );
+        if (
+          parsed &&
+          parsed.lobby !== this.session.lobby &&
+          parsed.lobby !== DIRECT_LOBBY
+        )
+          return;
         const join =
           parsed &&
           (parsed.lobby === this.session.lobby || parsed.lobby === DIRECT_LOBBY)
@@ -1079,20 +1094,71 @@ export class MeshSession {
         );
         break;
       }
-      case 'connection_accepted':
-        if (!this.session.host && this.session.isOpponent(event.accepted_by)) {
+      case 'connection_accepted': {
+        const acceptedBy =
+          event.accepted_by ??
+          (event as { acceptedBy?: string }).acceptedBy ??
+          '';
+        if (!acceptedBy) {
+          break;
+        }
+        meshLog('connection_accepted', {
+          by: shortPeer(acceptedBy),
+          guest: !this.session.host,
+        });
+        void (async () => {
           if (
             Array.isArray(event.key_package) &&
             event.key_package.length > 0
           ) {
-            void this.protocol
-              ?.mlsImportKeyPackage(event.accepted_by, event.key_package)
+            await this.protocol
+              ?.mlsImportKeyPackage(acceptedBy, event.key_package)
               .catch(() => {});
           }
-          this.discoveryError =
-            'You’re connected! Getting your board ready…';
+          if (await awaitMeshEstablishment(this.protocol, acceptedBy)) {
+            this.secureSessionPeers.add(acceptedBy);
+          }
+          this.trySendJoinOverSession(acceptedBy);
+          this.changed();
+        })();
+        if (!this.session.host && this.session.isOpponent(acceptedBy)) {
+          this.stopJoinTransport();
+        }
+        this.discoveryError =
+          !this.session.host && this.session.view.phase === 'connecting'
+            ? 'Host accepted — syncing board…'
+            : '';
+        break;
+      }
+      case 'secure_session_established': {
+        const peerId =
+          event.peer_id ??
+          (event as { peerId?: string }).peerId ??
+          '';
+        if (!peerId || peerId === this.localPeer) {
+          break;
+        }
+        this.secureSessionPeers.add(peerId);
+        this.reconcileCanonicalNeighbor(peerId);
+        this.updateNeighbors();
+        this.trySendJoinOverSession(peerId);
+        meshLog('secure_session_established', { peer: shortPeer(peerId) });
+        break;
+      }
+      case 'secure_session_failed': {
+        const peerId =
+          event.peer_id ??
+          (event as { peerId?: string }).peerId ??
+          '';
+        if (peerId) {
+          this.secureSessionPeers.delete(peerId);
+          meshWarn('secure_session_failed', {
+            peer: shortPeer(peerId),
+            reason: (event as { reason?: string }).reason,
+          });
         }
         break;
+      }
       case 'connection_rejected':
         if (
           !this.session.host &&
@@ -1111,7 +1177,7 @@ export class MeshSession {
           this.session.isOpponent(event.recipient)
         ) {
           this.discoveryError =
-            'Still connecting… your friend needs to tap Accept.';
+            'Request delivery is delayed. Retrying — keep both phones nearby.';
         }
         break;
       case 'message_failed':
@@ -1154,15 +1220,6 @@ export class MeshSession {
           this.neighborFirstSeen.set(event.sender, Date.now());
         }
         this.updateNeighbors();
-        const opponent = this.session.opponentPeer();
-        if (
-          opponent &&
-          event.sender !== opponent &&
-          event.sender.startsWith('off1') &&
-          this.neighbors.has(event.sender)
-        ) {
-          this.session.rebindOpponent(event.sender);
-        }
         const wasConnecting = this.session.view.phase === 'connecting';
         this.session.receive(event.sender, event.content);
         if (
