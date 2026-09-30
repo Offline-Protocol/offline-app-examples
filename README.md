@@ -57,6 +57,10 @@ See each app’s README for platform setup (CocoaPods, signing, etc.).
 
 ![Cowrite demo: iOS and Android editing the same document live](./apps/cowrite/demo.gif)
 
+### Tic Tac Together
+
+![Tic Tac Together demo: iOS and Android playing a game over Bluetooth](./apps/tictactogether/demo.gif)
+
 ## Packages
 
 | Package | Path | Description |
