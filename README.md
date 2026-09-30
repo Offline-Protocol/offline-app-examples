@@ -20,6 +20,22 @@ accounts or server, and shows a different way to keep shared state in sync.
 
 Each app's README explains how to run it, how its sync works and what its tests cover.
 
+### Order Up
+
+![Order Up demo: iOS kitchen display and Android waiter device](./apps/orderup/demo.gif)
+
+### Stock Sync
+
+![Stock Sync demo: iOS and Android syncing stock counts](./apps/stocksync/demo.gif)
+
+### Cowrite
+
+![Cowrite demo: iOS and Android editing the same document live](./apps/cowrite/demo.gif)
+
+### Tic Tac Together
+
+![Tic Tac Together demo: iOS and Android playing a game over Bluetooth](./apps/tictactogether/demo.gif)
+
 ## Shared packages
 
 | Package | Path | Description |
