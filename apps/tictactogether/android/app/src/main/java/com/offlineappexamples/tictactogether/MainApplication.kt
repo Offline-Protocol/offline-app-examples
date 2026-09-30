@@ -15,8 +15,6 @@ class MainApplication : Application(), ReactApplication {
       context = applicationContext,
       packageList =
         PackageList(this).packages.apply {
-          // Bind Offline ID HTTPS to Wi‑Fi even when Android marks it unvalidated.
-          add(NetworkBindingPackage())
           // Packages that cannot be autolinked yet can be added manually here, for example:
           // add(MyReactNativePackage())
         },

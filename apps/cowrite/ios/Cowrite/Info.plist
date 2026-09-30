@@ -38,8 +38,6 @@
 	<string>Write documents together with people nearby, without internet.</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>
 	<string>Write documents together with people nearby, without internet.</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string></string>
 	<key>RCTNewArchEnabled</key>
 	<true/>
 	<key>UIBackgroundModes</key>

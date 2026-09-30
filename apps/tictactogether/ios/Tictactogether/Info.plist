@@ -37,8 +37,6 @@
 	<string>Find a nearby friend and play Tic Tac Toe together, without internet.</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>
 	<string>Find a nearby friend and play Tic Tac Toe together, without internet.</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string></string>
 	<key>RCTNewArchEnabled</key>
 	<true/>
 	<key>UIBackgroundModes</key>
