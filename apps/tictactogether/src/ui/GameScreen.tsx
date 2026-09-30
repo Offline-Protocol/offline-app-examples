@@ -1,405 +1,347 @@
+import { Button, cn, Text } from '@offline-app-examples/ui';
 import React, { useEffect, useRef } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
+import { trigger } from 'react-native-haptic-feedback';
+import Animated, {
+  Easing,
+  FadeInDown,
+  interpolate,
+  type SharedValue,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Action, DomainState, Mark, other, result } from '../domain';
 import {
-  Arrive,
-  Board,
-  Button,
-  Celebration,
-  colors as C,
-  font,
-  haptic,
-  MarkArt,
-} from './Playful';
+  type Action,
+  type Game,
+  type Mark,
+  other,
+  result,
+} from '../domain/game';
+import { Board, MARK_COLOR, MarkArt } from './Board';
 
 type Props = {
-  game: DomainState;
+  game: Game;
   me: Mark;
   rivalName: string;
   /** Member: an action is on its way to the host. */
   syncing: boolean;
   /** The other phone is out of range; the board waits for it. */
   away: boolean;
-  onAction: (a: Action) => void;
+  onAction: (action: Action) => void;
   onLeave: () => void;
 };
 
-export function GameScreen({
-  game,
-  me,
-  rivalName,
-  syncing,
-  away,
-  onAction,
-  onLeave,
-}: Props) {
+type Outcome = 'win' | 'loss' | 'draw';
+
+const OUTCOME: Record<
+  Outcome,
+  { title: string; subtitle: string; bg: string }
+> = {
+  win: {
+    title: 'You won! 🎉',
+    subtitle: 'Three in a row. Look at you go.',
+    bg: 'bg-[#F7E9D6]',
+  },
+  loss: {
+    title: 'So close!',
+    subtitle: 'A tiny rain cloud. A fresh chance next round.',
+    bg: 'bg-[#EDEAF7]',
+  },
+  draw: {
+    title: 'It’s a draw 🤝',
+    subtitle: 'Great minds block alike.',
+    bg: 'bg-[#E5EFE4]',
+  },
+};
+
+const FOOTNOTE = 'text-muted-foreground text-center text-xs leading-5';
+const haptic = () => trigger('impactLight');
+
+export function GameScreen(props: Props) {
+  const { game, me, rivalName, syncing, away, onAction, onLeave } = props;
   const them = other(me);
   const end = result(game.board);
-  const finished = !!(end.winner || end.draw),
-    myTurn = game.turn === me,
-    blocked = syncing || away;
+  const finished = end.winner !== null || end.draw;
+  const outcome: Outcome = end.draw
+    ? 'draw'
+    : end.winner === me
+      ? 'win'
+      : 'loss';
+  const myTurn = game.turn === me;
+  const blocked = syncing || away;
 
-  const prior = useRef('');
+  // A tick for every move, including the rival's.
+  const lastBoard = useRef('');
   useEffect(() => {
     const key = `${game.round}-${game.board.join('')}`;
-    if (prior.current && prior.current !== key) haptic();
-    prior.current = key;
+    if (lastBoard.current && lastBoard.current !== key) haptic();
+    lastBoard.current = key;
   }, [game.round, game.board]);
 
-  const kind = end.draw ? 'draw' : end.winner === me ? 'win' : 'loss';
+  const act = (action: Action) => {
+    haptic();
+    onAction(action);
+  };
+
+  let status: string;
+  if (away) status = `Waiting for ${rivalName} to come back in range…`;
+  else if (finished) status = 'A little rivalry. A lot of fun.';
+  else if (syncing) status = 'Sending a little magic…';
+  else if (myTurn) status = 'Your turn. Make your mark!';
+  else status = 'Their turn. Plot your next move.';
+
   return (
-    <SafeAreaView style={s.safe}>
+    <SafeAreaView className="bg-paper flex-1">
       <ScrollView
-        contentContainerStyle={s.page}
+        contentContainerClassName="w-full max-w-[460px] grow self-center px-6 pb-4 pt-3"
         showsVerticalScrollIndicator={false}
       >
-        <View style={s.header}>
-          <Text style={s.wordmark}>✳ little rivalry</Text>
-          <View style={s.pill}>
-            <View style={[s.dot, away && { backgroundColor: C.coral }]} />
-            <Text style={s.pillText}>
+        <View className="mb-7 flex-row items-center justify-between">
+          <Text className="font-extrabold tracking-tight">
+            ✳ little rivalry
+          </Text>
+          <View className="bg-sand flex-row items-center gap-1.5 rounded-full px-2.5 py-1.5">
+            <View
+              className={cn(
+                'size-1.5 rounded-full',
+                away ? 'bg-coral' : 'bg-[#78A389]',
+              )}
+            />
+            <Text className="text-muted-foreground text-[9px] font-extrabold tracking-widest">
               {away ? 'RECONNECTING' : 'CONNECTED'}
             </Text>
           </View>
         </View>
-        <Arrive style={s.play}>
-          <View style={s.roundRow}>
-            <Text style={s.eyebrow}>THE FRIENDLY FACE-OFF</Text>
-            <Text style={s.round}>
-              Round {game.round.toString().padStart(2, '0')}
+
+        <Animated.View entering={FadeInDown.springify()} className="gap-4">
+          <View className="flex-row items-center justify-between">
+            <Text className="text-muted-foreground text-[10px] font-bold tracking-[2px]">
+              THE FRIENDLY FACE-OFF
+            </Text>
+            <Text className="text-muted-foreground text-xs font-bold">
+              Round {String(game.round).padStart(2, '0')}
             </Text>
           </View>
-          <View style={s.players}>
-            {[me, them].map((mark, i) => (
-              <View
-                key={mark}
-                style={[
-                  s.player,
-                  game.turn === mark && !finished && s.activePlayer,
-                ]}
-              >
+
+          <View className="flex-row gap-4">
+            {[me, them].map((mark) => {
+              const active = game.turn === mark && !finished;
+              return (
                 <View
-                  style={[
-                    s.avatar,
-                    { backgroundColor: mark === 'X' ? '#FCE3DB' : C.lavender },
-                  ]}
+                  key={mark}
+                  className={cn(
+                    'bg-sand flex-1 items-center rounded-3xl border-[1.5px] border-transparent px-2 py-4',
+                    active && 'border-plum/50 bg-lavender',
+                  )}
                 >
-                  <MarkArt mark={mark} size={45} animate={false} />
+                  <View
+                    className={cn(
+                      'mb-2 size-[53px] items-center justify-center rounded-[18px]',
+                      mark === 'X' ? 'bg-coral/20' : 'bg-lavender',
+                    )}
+                  >
+                    <MarkArt mark={mark} size={45} animate={false} />
+                  </View>
+                  <Text className="text-sm font-bold" numberOfLines={1}>
+                    {mark === me ? 'You' : rivalName}
+                  </Text>
+                  <Text className="mt-1 text-xl font-extrabold">
+                    {game.scores[mark]}{' '}
+                    <Text className="text-muted-foreground text-xs font-medium">
+                      wins
+                    </Text>
+                  </Text>
+                  {active && (
+                    <View className="bg-plum absolute right-3 top-3 size-1.5 rounded-full" />
+                  )}
                 </View>
-                <Text style={s.playerName} numberOfLines={1}>
-                  {i === 0 ? 'You' : rivalName}
-                </Text>
-                <Text style={s.score}>
-                  {game.scores[mark]} <Text style={s.wins}>wins</Text>
-                </Text>
-                {game.turn === mark && !finished && <View style={s.turnDot} />}
-              </View>
-            ))}
-            <Text style={s.vs}>vs</Text>
-          </View>
-          <View accessibilityLiveRegion="polite" style={s.turnBanner}>
-            <Text style={s.turnText}>
-              {away
-                ? `Waiting for ${rivalName} to come back in range…`
-                : finished
-                  ? 'A little rivalry. A lot of fun.'
-                  : syncing
-                    ? 'Sending a little magic…'
-                    : myTurn
-                      ? 'Your turn. Make your mark!'
-                      : 'Their turn. Plot your next move.'}
+              );
+            })}
+            <Text className="bg-paper text-muted-foreground absolute left-1/2 top-[62px] -ml-3.5 w-7 rounded-full py-1 text-center text-xs">
+              vs
             </Text>
+          </View>
+
+          <View
+            accessibilityLiveRegion="polite"
+            className="flex-row items-center justify-between"
+          >
+            <Text className="flex-1 text-sm font-semibold">{status}</Text>
             {!finished && !away && (
-              <Text style={s.turnSymbol}>{myTurn ? '✦' : '◌'}</Text>
+              <Text className="text-plum text-2xl">{myTurn ? '✦' : '◌'}</Text>
             )}
           </View>
+
           <Board
             board={game.board}
             line={end.line}
-            enabled={myTurn && !finished && !blocked}
-            move={(cell) => onAction({ kind: 'move', cell })}
+            onMove={
+              myTurn && !finished && !blocked
+                ? (cell) => act({ kind: 'move', cell })
+                : undefined
+            }
           />
+
           {finished ? (
-            <Arrive
-              key={`${game.round}-${kind}`}
-              style={[
-                s.result,
-                kind === 'loss' && { backgroundColor: '#EDEAF7' },
-                kind === 'draw' && { backgroundColor: '#E5EFE4' },
-              ]}
+            <Animated.View
+              key={`${game.round}-${outcome}`}
+              entering={FadeInDown.springify()}
+              className={cn('gap-3 rounded-3xl p-5', OUTCOME[outcome].bg)}
             >
-              <Celebration kind={kind} />
+              <Celebration outcome={outcome} />
               <Text
                 accessibilityRole="header"
                 accessibilityLiveRegion="polite"
-                style={s.resultTitle}
+                className="text-center text-3xl font-extrabold tracking-tight"
               >
-                {kind === 'win'
-                  ? 'You won! 🎉'
-                  : kind === 'loss'
-                    ? 'So close!'
-                    : 'It’s a draw 🤝'}
+                {OUTCOME[outcome].title}
               </Text>
-              <Text style={s.resultSubtitle}>
-                {kind === 'win'
-                  ? 'Three in a row. Look at you go.'
-                  : kind === 'loss'
-                    ? 'A tiny rain cloud. A fresh chance next round.'
-                    : 'Great minds block alike.'}
+              <Text className={cn(FOOTNOTE, 'mb-1')}>
+                {OUTCOME[outcome].subtitle}
               </Text>
               {game.rematch === them ? (
-                <View style={s.rematch}>
-                  <Text style={s.rematchText}>{rivalName} wants a rematch</Text>
-                  <View style={s.actions}>
-                    <View style={s.flex}>
-                      <Button
-                        disabled={blocked}
-                        onPress={() => onAction({ kind: 'accept' })}
-                      >
-                        Accept
-                      </Button>
-                    </View>
-                    <View style={s.flex}>
-                      <Button
-                        secondary
-                        disabled={blocked}
-                        onPress={() => onAction({ kind: 'decline' })}
-                      >
-                        Decline
-                      </Button>
-                    </View>
+                <>
+                  <Text className="text-center text-sm font-bold">
+                    {rivalName} wants a rematch
+                  </Text>
+                  <View className="flex-row gap-2.5">
+                    <Button
+                      size="lg"
+                      className="bg-foreground flex-1"
+                      disabled={blocked}
+                      onPress={() => act({ kind: 'accept' })}
+                    >
+                      <Text>Accept</Text>
+                    </Button>
+                    <Button
+                      size="lg"
+                      variant="secondary"
+                      className="bg-sand flex-1"
+                      disabled={blocked}
+                      onPress={() => act({ kind: 'decline' })}
+                    >
+                      <Text>Decline</Text>
+                    </Button>
                   </View>
-                </View>
+                </>
               ) : (
                 <>
                   <Button
+                    size="lg"
+                    className="bg-foreground"
                     disabled={blocked || game.rematch === me}
-                    onPress={() => onAction({ kind: 'rematch' })}
+                    onPress={() => act({ kind: 'rematch' })}
                   >
-                    {game.rematch === me
-                      ? 'Rematch requested…'
-                      : 'One more round?  ↻'}
+                    <Text>
+                      {game.rematch === me
+                        ? 'Rematch requested…'
+                        : 'One more round?  ↻'}
+                    </Text>
                   </Button>
                   {game.declined && (
-                    <Text style={s.smallCentered}>
+                    <Text className={FOOTNOTE}>
                       Rematch declined. Thanks for playing together!
                     </Text>
                   )}
                 </>
               )}
-            </Arrive>
+            </Animated.View>
           ) : (
-            <View style={s.roundFooter}>
-              <Text style={s.smallCentered}>
-                THREE IN A ROW. ALL THE GLORY.
-              </Text>
-              <Text style={s.smallCentered}>
+            <View className="gap-2 pt-2">
+              <Text className={FOOTNOTE}>THREE IN A ROW. ALL THE GLORY.</Text>
+              <Text className={FOOTNOTE}>
                 {game.scores.draws} {game.scores.draws === 1 ? 'draw' : 'draws'}{' '}
                 · X and O alternate first move each round
               </Text>
             </View>
           )}
-          <Pressable
-            accessibilityRole="button"
-            onPress={onLeave}
-            style={s.leaveButton}
-          >
-            <Text style={s.leaveLink}>Leave & find someone new ↗</Text>
-          </Pressable>
-        </Arrive>
-        <View style={s.brandFooter}>
-          <Text style={s.footer}>✳ powered by Offline Protocol</Text>
-          <Text style={s.footerDot}>•••</Text>
+
+          <Button variant="ghost" onPress={onLeave}>
+            <Text className="text-muted-foreground text-xs">
+              Leave & find someone new ↗
+            </Text>
+          </Button>
+        </Animated.View>
+
+        <View className="mt-auto flex-row justify-between pt-6">
+          <Text className="text-[9px] text-[#A49FAB]">
+            ✳ powered by Offline Protocol
+          </Text>
+          <Text className="tracking-[3px] text-[#C4BDCE]">•••</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: C.paper },
-  page: {
-    flexGrow: 1,
-    paddingHorizontal: 26,
-    paddingTop: 12,
-    paddingBottom: 14,
-    maxWidth: 460,
-    width: '100%',
-    alignSelf: 'center',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 30,
-  },
-  wordmark: {
-    fontFamily: font,
-    fontSize: 16,
-    fontWeight: '800',
-    color: C.ink,
-    letterSpacing: -0.5,
-  },
-  pill: {
-    flexDirection: 'row',
-    gap: 5,
-    alignItems: 'center',
-    backgroundColor: '#EEECE4',
-    paddingHorizontal: 9,
-    paddingVertical: 7,
-    borderRadius: 20,
-  },
-  dot: {
-    width: 5,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: '#78A389',
-  },
-  pillText: {
-    fontFamily: font,
-    fontSize: 8,
-    fontWeight: '800',
-    letterSpacing: 1,
-    color: '#5D6860',
-  },
-  eyebrow: {
-    fontFamily: font,
-    color: C.muted,
-    fontWeight: '700',
-    fontSize: 9,
-    letterSpacing: 1.8,
-  },
-  smallCentered: {
-    fontFamily: font,
-    fontSize: 11,
-    lineHeight: 18,
-    color: C.muted,
-    textAlign: 'center',
-  },
-  leaveButton: { padding: 13, alignItems: 'center' },
-  leaveLink: {
-    fontFamily: font,
-    fontWeight: '600',
-    fontSize: 12,
-    color: '#777183',
-  },
-  brandFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingTop: 24,
-    marginTop: 'auto',
-  },
-  footer: { fontFamily: font, fontSize: 9, color: '#A49FAB' },
-  footerDot: { color: '#C4BDCE', letterSpacing: 3 },
-  actions: { flexDirection: 'row', gap: 10 },
-  flex: { flex: 1 },
-  play: { gap: 18 },
-  roundRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  round: { fontFamily: font, fontSize: 11, fontWeight: '700', color: C.muted },
-  players: { flexDirection: 'row', gap: 16, position: 'relative' },
-  player: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 15,
-    paddingHorizontal: 8,
-    borderRadius: 25,
-    backgroundColor: '#F1EEE8',
-    borderWidth: 1.5,
-    borderColor: 'transparent',
-  },
-  activePlayer: { borderColor: '#C6B9E9', backgroundColor: '#F2EDF9' },
-  avatar: {
-    height: 53,
-    width: 53,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 7,
-  },
-  playerName: {
-    fontFamily: font,
-    fontSize: 13,
-    fontWeight: '700',
-    color: C.ink,
-  },
-  score: {
-    fontFamily: font,
-    fontSize: 19,
-    fontWeight: '800',
-    color: C.ink,
-    marginTop: 5,
-  },
-  wins: { fontWeight: '500', fontSize: 11, color: C.muted },
-  vs: {
-    position: 'absolute',
-    top: 62,
-    left: '50%',
-    marginLeft: -13,
-    width: 26,
-    textAlign: 'center',
-    color: C.muted,
-    fontFamily: font,
-    fontSize: 11,
-    backgroundColor: C.paper,
-    borderRadius: 13,
-    paddingVertical: 5,
-  },
-  turnDot: {
-    position: 'absolute',
-    top: 13,
-    right: 13,
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: C.purple,
-  },
-  turnBanner: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  turnText: {
-    flex: 1,
-    fontFamily: font,
-    fontSize: 13,
-    fontWeight: '600',
-    color: C.ink,
-  },
-  turnSymbol: { color: C.purple, fontSize: 23 },
-  roundFooter: { gap: 9, paddingTop: 10 },
-  result: {
-    padding: 20,
-    borderRadius: 25,
-    backgroundColor: '#F7E9D6',
-    gap: 12,
-  },
-  resultTitle: {
-    fontFamily: font,
-    fontSize: 29,
-    fontWeight: '800',
-    letterSpacing: -1,
-    color: C.ink,
-    textAlign: 'center',
-  },
-  resultSubtitle: {
-    fontFamily: font,
-    fontSize: 12,
-    lineHeight: 19,
-    textAlign: 'center',
-    color: '#827486',
-    marginBottom: 5,
-  },
-  rematch: { gap: 12 },
-  rematchText: {
-    fontFamily: font,
-    fontSize: 13,
-    fontWeight: '700',
-    color: C.ink,
-    textAlign: 'center',
-  },
-});
+// Confetti for a win, a bobbing rain cloud or handshake otherwise. Under
+// Reduce Motion Reanimated skips the loop: no confetti, a still emoji.
+function Celebration({ outcome }: { outcome: Outcome }) {
+  const p = useSharedValue(0);
+  useEffect(() => {
+    const duration = outcome === 'win' ? 2600 : 1800;
+    p.value = withRepeat(
+      withTiming(1, { duration, easing: Easing.linear }),
+      -1,
+    );
+  }, [p, outcome]);
+  const bob = useAnimatedStyle(() => ({
+    transform: [
+      { translateY: interpolate(p.value, [0, 0.5, 1], [0, -8, 0]) },
+      { rotate: `${interpolate(p.value, [0, 0.5, 1], [-8, 8, -8])}deg` },
+    ],
+  }));
+
+  if (outcome === 'win') {
+    return (
+      <View
+        pointerEvents="none"
+        className="absolute -inset-x-6 -top-28 z-10 h-[350px]"
+      >
+        {Array.from({ length: 24 }, (_, i) => (
+          <Confetto key={i} i={i} p={p} />
+        ))}
+      </View>
+    );
+  }
+  return (
+    <View className="h-16 items-center">
+      <Animated.Text className="text-5xl" style={bob}>
+        {outcome === 'loss' ? '🌧️' : '🤝'}
+      </Animated.Text>
+      {outcome === 'loss' && (
+        <Text className="text-plum absolute top-10 text-2xl">﹏ ﹏ ﹏</Text>
+      )}
+    </View>
+  );
+}
+
+const CONFETTI = [MARK_COLOR.X, MARK_COLOR.O, '#E9BF58', '#75B79D'];
+
+// One piece; `i` spreads the pieces out in position, size, speed and spin.
+function Confetto({ i, p }: { i: number; p: SharedValue<number> }) {
+  const fall = useAnimatedStyle(() => ({
+    opacity: interpolate(p.value, [0, 0.8, 1], [1, 1, 0]),
+    transform: [
+      {
+        translateY: interpolate(
+          p.value,
+          [0, 1],
+          [-40 - (i % 4) * 25, 260 + (i % 5) * 20],
+        ),
+      },
+      { rotate: `${i * 20 + p.value * 270}deg` },
+    ],
+  }));
+  const piece = {
+    left: `${(i * 37) % 100}%` as const,
+    width: i % 2 ? 7 : 10,
+    height: i % 2 ? 14 : 7,
+    borderRadius: i % 3 ? 2 : 8,
+    backgroundColor: CONFETTI[i % 4],
+  };
+  return <Animated.View className="absolute" style={[piece, fall]} />;
+}

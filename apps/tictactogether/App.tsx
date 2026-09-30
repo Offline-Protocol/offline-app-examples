@@ -1,19 +1,19 @@
 import '@offline-app-examples/ui/global.css';
 import { useNearbyRoom } from '@offline-app-examples/mesh';
-import { NearbyLobby, PortalHost } from '@offline-app-examples/ui';
+import { NearbyLobby } from '@offline-app-examples/ui';
 import React, { useEffect, useRef, useState } from 'react';
 import { StatusBar, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import {
-  Action,
-  initialMatch,
-  Match,
+  newMatch,
   parseMessage,
   play,
   transition,
-} from './src/domain';
+  type Action,
+  type Match,
+} from './src/domain/game';
+import { Board, MARK_COLOR } from './src/ui/Board';
 import { GameScreen } from './src/ui/GameScreen';
-import { Board, colors } from './src/ui/Playful';
 
 const APP_ID = 'tictactogether';
 // Safety net for a message lost on the radio while the link still looked fine.
@@ -24,13 +24,13 @@ const warn = (error: unknown) =>
   console.warn('[tictactogether] send failed', error);
 
 // The host plays X and owns the match; the first phone to join plays O.
-// Rules and message validation are in src/domain; this file wires them to the room.
+// Rules and message validation are in src/domain/game.ts; this file wires them to the room.
 export default function App() {
   const [name, setName] = useState('');
   const [notice, setNotice] = useState('');
   const [rivalName, setRivalName] = useState('');
   // Kept in a ref too, so room callbacks always read the latest value.
-  const [match, setMatchState] = useState(initialMatch);
+  const [match, setMatchState] = useState(newMatch);
   const matchRef = useRef(match);
   // Member: the action sent to the host, until a newer state confirms it.
   const [pending, setPending] = useState<{ rev: number; action: Action }>();
@@ -75,7 +75,7 @@ export default function App() {
         // First rival, or the old one is gone and someone new is here: fresh game.
         rivalAway.current = false;
         setRivalName(peer.name);
-        setMatch({ ...initialMatch(), rev: current.rev + 1, o: peer.id });
+        setMatch({ ...newMatch(), rev: current.rev + 1, o: peer.id });
       }
       // Everyone else learns from `o` that the game is full.
       room.send(peer.id, stateOf(matchRef.current)).catch(warn);
@@ -117,7 +117,7 @@ export default function App() {
   };
 
   const reset = () => {
-    setMatch(initialMatch());
+    setMatch(newMatch());
     setPending(undefined);
     setNotice('');
     setRivalName('');
@@ -151,17 +151,15 @@ export default function App() {
           title="Tic Tac Together"
           tagline="A classic game. A nearby friend. No internet needed."
           illustration={
-            <View style={{ width: 190, marginBottom: 12 }}>
+            <View className="mb-3 w-[190px]">
               <Board
                 board={['X', null, 'O', null, 'X', null, 'O', null, 'X']}
                 line={[]}
-                enabled={false}
-                move={() => {}}
                 decorative
               />
             </View>
           }
-          accentColor={colors.coral}
+          accentColor={MARK_COLOR.X}
           status={room.status}
           error={room.error || notice}
           hosts={room.hosts}
@@ -194,7 +192,6 @@ export default function App() {
           }}
         />
       )}
-      <PortalHost />
     </SafeAreaProvider>
   );
 }

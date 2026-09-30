@@ -1,6 +1,6 @@
 import '@offline-app-examples/ui/global.css';
 import { useNearbyRoom } from '@offline-app-examples/mesh';
-import { NearbyLobby, PortalHost } from '@offline-app-examples/ui';
+import { NearbyLobby } from '@offline-app-examples/ui';
 import React, { useState } from 'react';
 import { StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -72,7 +72,6 @@ export default function App() {
           }}
         />
       )}
-      <PortalHost />
     </SafeAreaProvider>
   );
 }

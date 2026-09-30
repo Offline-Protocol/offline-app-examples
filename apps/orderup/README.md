@@ -86,7 +86,7 @@ most 30 open orders and 30 served ids, which a test checks stays under the room'
 | `src/ui/KitchenScreen.tsx` | Kitchen display: tickets by status (columns on tablets, tabs on phones) |
 | `src/ui/OrderScreen.tsx` | Waiter: table, menu, cart, my orders |
 | `src/ui/common.tsx` | Top bar, status colors, "3 min ago" |
-| `src/ui/illustrations/` | Hand-drawn SVG food art and the lobby bell |
+| `src/ui/illustrations.tsx` | Hand-drawn SVG food art and the lobby bell |
 
 ## Checks
 

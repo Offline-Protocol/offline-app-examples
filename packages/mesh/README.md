@@ -47,9 +47,8 @@ room.broadcast({ type: 'snapshot', items });
 
 For the SDK's replicated documents (`DataStore`), which live in an MLS group.
 
-- **Host:** `host(name)` creates an MLS group (or reuses one with
-  `host(name, { groupId })` if this device still has it), so `groupId` is set by the
-  time status is `'hosting'`. For each joiner it waits until the SDK holds a fresh key
+- **Host:** `host(name)` creates an MLS group, so `groupId` is set by the time status
+  is `'hosting'`. For each joiner it waits until the SDK holds a fresh key
   package for them (the SDK sends one right after the 1:1 session forms), calls
   `meshInviteToGroup`, then also tells the member the group id in a room message.
 - **Member:** learns the group id from `group_member_added` (the host's Welcome was
@@ -69,7 +68,7 @@ await store.textInsert(room.groupId!, 'doc', 'body', 0, 'Hello');
 
 ## Limits and caveats
 
-- One message is at most 16 KiB of JSON by default (`maxMessageBytes`); `send` throws
+- One message is at most 16 KiB of JSON; `send` throws
   above it. Bluetooth moves roughly 180–500 bytes per fragment, so keep messages small.
 - iOS keeps at most about 4 Bluetooth connections per device, so plan for small rooms.
 - Wi-Fi Direct is off: in SDK 0.27 the phone Wi-Fi Direct transport carries no traffic.

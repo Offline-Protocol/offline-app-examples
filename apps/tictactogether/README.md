@@ -46,9 +46,10 @@ The host owns the match: `{ rev, game, o }`, where `o` is the room peer id playi
 | File | What it does |
 | --- | --- |
 | `App.tsx` | Room wiring: who sends what, lobby vs. game |
-| `src/domain/index.ts` | Rules, match revisions, wire messages and their validation (tested) |
-| `src/ui/GameScreen.tsx` | Scores, board, result card, rematch |
-| `src/ui/Playful.tsx` | Board, animated marks, celebration, haptics |
+| `src/domain/game.ts` | Rules, match revisions, wire messages and their validation (tested) |
+| `src/ui/GameScreen.tsx` | Scores, turn, result card with confetti, rematch, haptics |
+| `src/ui/Board.tsx` | Board, self-drawing X and O marks, winning line |
+| `tailwind.config.js` | The game's colors on top of the shared theme |
 
 ## Checks
 

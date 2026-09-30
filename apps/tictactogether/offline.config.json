@@ -1,8 +1,0 @@
-{
-  "$schema": "https://dev.offlineprotocol.com/schemas/offline.config.json",
-  "projectName": "tictactogether",
-  "platform": "react-native",
-  "template": "react-native-mesh-custom-app",
-  "workflow": "custom-p2p-app",
-  "packages": ["@offline-protocol/mesh-sdk"]
-}

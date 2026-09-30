@@ -20,7 +20,7 @@ import { Input } from './components/input';
 import { Text } from './components/text';
 import { cn } from './lib/utils';
 
-/** Same values as `RoomStatus` in @offline-app-examples/mesh, so `room.status` can be passed straight in. */
+/** Matches `room.status` from useNearbyRoom, so it can be passed straight in. */
 export type LobbyStatus =
   | 'idle'
   | 'starting'

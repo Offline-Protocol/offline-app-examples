@@ -32,8 +32,15 @@ export type RoomOptions = {
   appId: string;
   /** Host creates an MLS group and adds every joiner, for the SDK's DataStore. */
   group?: boolean;
-  /** Upper bound for one message, in bytes of JSON. Default 16 KiB. */
-  maxMessageBytes?: number;
+};
+
+/** App callbacks. useNearbyRoom always hands the room their latest version. */
+export type RoomCallbacks = {
+  onMessage?: (from: string, data: unknown) => void;
+  onPeerJoined?: (peer: RoomPeer) => void;
+  onPeerLeft?: (peer: RoomPeer) => void;
+  /** Every raw SDK event, e.g. `data_changed` for DataStore. */
+  onProtocolEvent?: (event: ProtocolEvent) => void;
 };
 
 export type RoomSnapshot = {
@@ -49,16 +56,6 @@ export type RoomSnapshot = {
   peers: RoomPeer[];
   /** Group mode: the MLS group id, usable as a DataStore space id. */
   groupId: string | null;
-  /** The running SDK instance, for DataStore and advanced use. Null when idle. */
-  protocol: OfflineProtocol | null;
-};
-
-type Events = {
-  change: () => void;
-  message: (from: string, data: unknown) => void;
-  peerJoined: (peer: RoomPeer) => void;
-  peerLeft: (peer: RoomPeer) => void;
-  protocolEvent: (event: ProtocolEvent) => void;
 };
 
 const TICK_MS = 2000;
@@ -68,7 +65,7 @@ const NEIGHBOR_SETTLE_MS = 2000; // a fresh BLE link needs a moment before a joi
 const JOIN_RETRY_MS = 8000;
 const JOIN_TIMEOUT_MS = 90_000;
 const PEER_LOST_GRACE_MS = 20_000; // BLE links flap; only drop a peer that stays gone
-const DEFAULT_MAX_MESSAGE_BYTES = 16 * 1024;
+const MAX_MESSAGE_BYTES = 16 * 1024; // one message, in bytes of JSON
 
 const pause = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
 const errorMessage = (error: unknown) => (error instanceof Error ? error.message : String(error));
@@ -89,17 +86,11 @@ export class NearbyRoom {
     hosts: [],
     peers: [],
     groupId: null,
-    protocol: null,
   };
-  private listeners: { [K in keyof Events]: Set<Events[K]> } = {
-    change: new Set(),
-    message: new Set(),
-    peerJoined: new Set(),
-    peerLeft: new Set(),
-    protocolEvent: new Set(),
-  };
+  private listeners = new Set<() => void>();
+  /** The running SDK instance. Null when idle. */
+  private protocol: OfflineProtocol | null = null;
   private readonly serviceId: string;
-  private readonly maxBytes: number;
   private readonly services = new MeshServices();
   private name = '';
   private timer?: ReturnType<typeof setInterval>;
@@ -123,41 +114,36 @@ export class NearbyRoom {
   private joinStartedAt = 0;
   private lastJoinRequestAt = 0;
 
-  constructor(private readonly options: RoomOptions) {
+  constructor(
+    private readonly options: RoomOptions,
+    private readonly callbacks: () => RoomCallbacks,
+  ) {
     this.serviceId = `${options.appId}-room`;
-    this.maxBytes = options.maxMessageBytes ?? DEFAULT_MAX_MESSAGE_BYTES;
   }
 
   // ---------------------------------------------------------------- public API
 
   getSnapshot = (): RoomSnapshot => this.snapshot;
 
-  subscribe = (listener: () => void): (() => void) => this.on('change', listener);
-
-  on<K extends keyof Events>(event: K, listener: Events[K]): () => void {
-    this.listeners[event].add(listener);
-    return () => this.listeners[event].delete(listener);
-  }
+  subscribe = (listener: () => void): (() => void) => {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  };
 
   /**
    * Starts advertising a room called `displayName`. Joiners are accepted automatically.
-   * Group mode: creates an MLS group (or reuses `groupId` if this device still has it),
-   * so `groupId` is set as soon as the status is 'hosting'.
+   * Group mode: creates an MLS group, so `groupId` is set as soon as the status is 'hosting'.
    */
-  host = async (displayName: string, opts: { groupId?: string } = {}): Promise<void> => {
+  host = async (displayName: string): Promise<void> => {
     const p = await this.start('host', cleanName(displayName, 'Host'));
     if (!p) return;
     try {
-      let groupId: string | null = null;
-      if (this.options.group) {
-        const existing = opts.groupId ? await p.meshGetGroupInfo(opts.groupId).catch(() => null) : null;
-        groupId = existing ? existing.groupId : (await p.meshCreateGroup(this.name)).groupId;
-      }
+      const groupId = this.options.group ? (await p.meshCreateGroup(this.name)).groupId : null;
       await this.advertise();
-      if (this.snapshot.protocol !== p) return; // left meanwhile
+      if (this.protocol !== p) return; // left meanwhile
       this.update({ status: 'hosting', hostId: this.snapshot.localId, groupId });
     } catch (error) {
-      if (this.snapshot.protocol === p) this.fail(error);
+      if (this.protocol === p) this.fail(error);
     }
   };
 
@@ -187,7 +173,7 @@ export class NearbyRoom {
 
   /** Sends `data` to every connected peer: the host to all members, a member to its host. */
   broadcast = async (data: unknown): Promise<void> => {
-    const content = encodeEnvelope({ t: 'app', d: data }, this.maxBytes);
+    const content = encodeEnvelope({ t: 'app', d: data }, MAX_MESSAGE_BYTES);
     await Promise.all(this.snapshot.peers.map(peer => this.sendRaw(peer.id, content)));
   };
 
@@ -213,7 +199,7 @@ export class NearbyRoom {
       if (generation !== this.generation) return null;
       const p = new OfflineProtocol(protocolConfig(this.options));
       p.on('all', this.onEvent); // before start(), so no message event is missed
-      this.update({ protocol: p });
+      this.protocol = p;
       await p.start();
       await pause(500); // let native BLE and the MLS identity settle
       if (!(await p.isMlsInitialized())) await p.initializeMlsWithSecureStorage();
@@ -240,15 +226,15 @@ export class NearbyRoom {
 
   /** Tears the protocol down in the background; `this.stopping` settles when done. */
   private stop(sayByeTo: RoomPeer[] = []) {
-    const p = this.snapshot.protocol;
+    const p = this.protocol;
     const wasHost = this.snapshot.role === 'host';
     this.generation++;
     clearInterval(this.timer);
     this.lostTimers.forEach(clearTimeout);
     this.resetSession();
-    this.update({ protocol: null });
+    this.protocol = null;
     if (!p) return;
-    const bye = encodeEnvelope({ t: 'bye' }, this.maxBytes);
+    const bye = encodeEnvelope({ t: 'bye' }, MAX_MESSAGE_BYTES);
     this.stopping = (async () => {
       p.off('all', this.onEvent);
       if (sayByeTo.length) {
@@ -275,8 +261,8 @@ export class NearbyRoom {
   // ------------------------------------------------------------------ events
 
   private onEvent = (event: ProtocolEvent) => {
-    if (!this.snapshot.protocol) return;
-    this.emit('protocolEvent', event);
+    if (!this.protocol) return;
+    this.callbacks().onProtocolEvent?.(event);
     switch (event.type) {
       case 'identity_ready':
         if (event.address) this.update({ localId: event.address });
@@ -353,7 +339,7 @@ export class NearbyRoom {
 
   /** Gives the auto key exchange a nudge so the encrypted 1:1 session is ready sooner. */
   private async primeSession(peerId: string) {
-    const p = this.snapshot.protocol;
+    const p = this.protocol;
     for (let attempt = 0, delay = 100; p && attempt < 6; attempt++, delay = Math.min(delay * 2, 400)) {
       const state = await p.getEstablishmentState(peerId).catch(() => null);
       if (state === 'SessionConfirmed' || state === 'SessionPending') return;
@@ -369,7 +355,7 @@ export class NearbyRoom {
   }
 
   private async refreshDiscovery() {
-    const p = this.snapshot.protocol;
+    const p = this.protocol;
     if (!p || this.discoveryInFlight) return;
     this.discoveryInFlight = true;
     try {
@@ -412,7 +398,8 @@ export class NearbyRoom {
   }
 
   private async sendJoinRequest() {
-    const { protocol: p, hostId } = this.snapshot;
+    const p = this.protocol;
+    const { hostId } = this.snapshot;
     if (!p || !hostId || this.snapshot.status !== 'joining') return;
     const firstSeen = this.neighbors.get(hostId);
     if (firstSeen === undefined || Date.now() - firstSeen < NEIGHBOR_SETTLE_MS) return; // the tick retries
@@ -424,7 +411,7 @@ export class NearbyRoom {
 
   /** Host side: every join request is accepted (again, if it is a retry). */
   private async onJoinRequest(peerId: string, peerName: string) {
-    const p = this.snapshot.protocol;
+    const p = this.protocol;
     if (!p || !peerId || peerId === this.snapshot.localId) return;
     if (this.snapshot.role !== 'host') {
       await p.rejectConnectionRequest({ recipient: peerId }).catch(() => {});
@@ -453,7 +440,8 @@ export class NearbyRoom {
 
   /** Host side: add each member to the group once the SDK holds a key package for them. */
   private async inviteMembers() {
-    const { protocol: p, groupId } = this.snapshot;
+    const p = this.protocol;
+    const { groupId } = this.snapshot;
     if (!p || !groupId || this.invitesInFlight) return;
     this.invitesInFlight = true;
     try {
@@ -479,11 +467,11 @@ export class NearbyRoom {
 
   /** Member side: wait until the Welcome for `groupId` has been processed locally. */
   private async adoptGroup(groupId: string) {
-    const p = this.snapshot.protocol;
+    const p = this.protocol;
     if (!p || !this.options.group || this.snapshot.groupId || this.adoptingGroup) return;
     this.adoptingGroup = true;
     try {
-      for (let attempt = 0; attempt < 30 && this.snapshot.protocol === p; attempt++) {
+      for (let attempt = 0; attempt < 30 && this.protocol === p; attempt++) {
         if (await p.meshGetGroupInfo(groupId).catch(() => null)) {
           this.update({ groupId, status: this.accepted.size ? 'connected' : this.snapshot.status });
           return;
@@ -498,7 +486,7 @@ export class NearbyRoom {
   // ----------------------------------------------------------------- messages
 
   private onMessage(from: string, content: string) {
-    const envelope = decodeEnvelope(content, this.maxBytes);
+    const envelope = decodeEnvelope(content, MAX_MESSAGE_BYTES);
     if (!envelope) return;
     if (!this.accepted.has(from)) {
       if (!this.isJoining(from)) return; // not part of this room
@@ -506,7 +494,7 @@ export class NearbyRoom {
     }
     this.backInRange(from);
     if (envelope.t === 'app') {
-      this.emit('message', from, envelope.d);
+      this.callbacks().onMessage?.(from, envelope.d);
     } else if (envelope.t === 'bye') {
       this.accepted.delete(from);
       this.removePeer(from);
@@ -517,11 +505,11 @@ export class NearbyRoom {
   }
 
   private async sendEnvelope(peerId: string, envelope: Envelope) {
-    await this.sendRaw(peerId, encodeEnvelope(envelope, this.maxBytes));
+    await this.sendRaw(peerId, encodeEnvelope(envelope, MAX_MESSAGE_BYTES));
   }
 
   private async sendRaw(peerId: string, content: string) {
-    const p = this.snapshot.protocol;
+    const p = this.protocol;
     if (!p) throw new Error('The room is not running.');
     // Queued by the SDK until the encrypted session is ready, then retried until acknowledged.
     await p.sendMessage({ recipient: peerId, content, priority: MessagePriority.High });
@@ -537,7 +525,7 @@ export class NearbyRoom {
     if (name === undefined || this.snapshot.peers.some(p => p.id === id)) return;
     const peer = { id, name };
     this.update({ peers: [...this.snapshot.peers, peer] });
-    this.emit('peerJoined', peer);
+    this.callbacks().onPeerJoined?.(peer);
   }
 
   private schedulePeerLost(id: string) {
@@ -555,28 +543,18 @@ export class NearbyRoom {
     const peer = this.snapshot.peers.find(p => p.id === id);
     if (!peer) return;
     this.update({ peers: this.snapshot.peers.filter(p => p.id !== id) });
-    this.emit('peerLeft', peer);
+    this.callbacks().onPeerLeft?.(peer);
   }
 
   // ------------------------------------------------------------------ helpers
 
   private update(patch: Partial<RoomSnapshot>) {
     this.snapshot = { ...this.snapshot, ...patch };
-    this.emit('change');
-  }
-
-  private emit<K extends keyof Events>(event: K, ...args: Parameters<Events[K]>) {
-    this.listeners[event].forEach(listener => {
-      try {
-        (listener as (...a: Parameters<Events[K]>) => void)(...args);
-      } catch (error) {
-        log(this.options.appId, `${event} listener threw`, errorMessage(error));
-      }
-    });
+    this.listeners.forEach(listener => listener());
   }
 }
 
-const IDLE: Omit<RoomSnapshot, 'localId' | 'protocol'> = {
+const IDLE: Omit<RoomSnapshot, 'localId'> = {
   status: 'idle',
   error: '',
   role: null,
