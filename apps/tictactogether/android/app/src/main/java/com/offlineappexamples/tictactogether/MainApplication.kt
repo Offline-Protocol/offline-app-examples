@@ -1,4 +1,4 @@
-package com.tictactogether
+package com.offlineappexamples.tictactogether
 
 import android.app.Application
 import com.facebook.react.PackageList

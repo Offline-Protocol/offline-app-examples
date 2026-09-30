@@ -1,4 +1,4 @@
-package com.tictactogether
+package com.offlineappexamples.tictactogether
 
 import com.facebook.react.ReactPackage
 import com.facebook.react.bridge.NativeModule

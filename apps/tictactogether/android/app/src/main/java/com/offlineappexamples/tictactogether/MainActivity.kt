@@ -1,4 +1,4 @@
-package com.tictactogether
+package com.offlineappexamples.tictactogether
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

@@ -1,4 +1,4 @@
-package com.tictactogether
+package com.offlineappexamples.tictactogether
 
 import android.content.Context
 import android.net.ConnectivityManager

@@ -1,4 +1,4 @@
-# Offline Protocol — example apps
+# Offline Protocol - example apps
 
 pnpm + [Turborepo](https://turbo.build/) monorepo for sample apps that use the [@offline-protocol/mesh-sdk](https://www.npmjs.com/package/@offline-protocol/mesh-sdk).
 
@@ -43,6 +43,8 @@ pnpm --filter @offline-app-examples/tictactogether android
 | Order Up | [`apps/orderup`](./apps/orderup) | Restaurant POS: order devices send tickets to a kitchen display, status flows back |
 | Cowrite | [`apps/cowrite`](./apps/cowrite) | Offline shared doc editor with live cursors, built on the SDK's CRDT documents |
 
+See each app’s README for platform setup (CocoaPods, signing, etc.).
+
 ### Order Up
 
 ![Order Up demo: iOS kitchen display and Android waiter device](./apps/orderup/demo.gif)
@@ -55,9 +57,12 @@ pnpm --filter @offline-app-examples/tictactogether android
 
 ![Cowrite demo: iOS and Android editing the same document live](./apps/cowrite/demo.gif)
 
-Shared code lives in [`packages/ui`](./packages/ui) (React Native Reusables components + nearby lobby) and [`packages/mesh`](./packages/mesh) (a small nearby-room wrapper over the SDK).
+## Packages
 
-See each app’s README for platform setup (CocoaPods, signing, etc.).
+| Package | Path | Description |
+| --- | --- | --- |
+| Mesh | [`packages/mesh`](./packages/mesh) | Nearby rooms over Bluetooth on the SDK: host, discover, join, messages, optional MLS group |
+| UI | [`packages/ui`](./packages/ui) | Shared React Native UI: RN Reusables components, NativeWind theme, `NearbyLobby` screen |
 
 ## Adding a new example
 
