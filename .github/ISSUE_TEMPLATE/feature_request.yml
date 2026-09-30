@@ -1,0 +1,16 @@
+name: Example request or improvement
+description: Suggest a change to an example, or a new example.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like to see
+      description: The change or the new example, and what it would help developers learn.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Anything else that helps, such as the kind of app you are building.

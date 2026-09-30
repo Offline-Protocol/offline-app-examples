@@ -64,9 +64,9 @@ export function InventoryScreen(props: Props) {
   let status: string;
   if (reconnecting) status = 'Reconnecting…';
   else if (!isHost) status = 'Connected';
-  else if (others === 0) status = 'Open · waiting for people nearby';
+  else if (others === 0) status = 'Open, waiting for people nearby';
   else
-    status = `Open · ${others} ${others === 1 ? 'person' : 'people'} connected`;
+    status = `Open, ${others} ${others === 1 ? 'person' : 'people'} connected`;
 
   return (
     <SafeAreaView className="bg-background flex-1" edges={['top', 'bottom']}>

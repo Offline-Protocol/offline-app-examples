@@ -2,6 +2,7 @@
   "name": "offline-app-examples",
   "version": "1.0.0",
   "private": true,
+  "license": "MIT-0",
   "description": "Monorepo of example apps built with the Offline Protocol mesh SDK",
   "scripts": {
     "dev": "turbo dev",

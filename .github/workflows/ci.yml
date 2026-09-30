@@ -5,9 +5,20 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  TURBO_TELEMETRY_DISABLED: 1
+
 jobs:
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -19,3 +30,87 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm test
+      - name: Bundle JavaScript for iOS and Android
+        run: |
+          for app in apps/*/; do
+            for platform in ios android; do
+              echo "::group::$app $platform"
+              (cd "$app" && npx react-native bundle --platform "$platform" --dev false \
+                --entry-file index.js --bundle-output "$RUNNER_TEMP/$(basename "$app").$platform.jsbundle" \
+                --assets-dest "$RUNNER_TEMP/assets-$(basename "$app")-$platform")
+              echo "::endgroup::"
+            done
+          done
+
+  android:
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [tictactogether, stocksync, orderup, cowrite]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+      - run: pnpm install --frozen-lockfile
+      - name: Build debug APK
+        working-directory: apps/${{ matrix.app }}/android
+        run: ./gradlew assembleDebug -PreactNativeArchitectures=x86_64 --no-daemon
+
+  ios:
+    needs: check
+    runs-on: macos-15
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: tictactogether
+            scheme: Tictactogether
+          - app: stocksync
+            scheme: StockSync
+          - app: orderup
+            scheme: OrderUp
+          - app: cowrite
+            scheme: Cowrite
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # CocoaPods on the runner's default Ruby intermittently fails with
+      # "pathname contains null byte" (CocoaPods/CocoaPods#12798), so use the
+      # app's Gemfile on Ruby 3.2 and retry.
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+          working-directory: apps/${{ matrix.app }}
+      - name: Install pods
+        working-directory: apps/${{ matrix.app }}/ios
+        run: |
+          for attempt in 1 2 3; do
+            bundle exec pod install && exit 0
+            echo "pod install failed (attempt $attempt), retrying"
+            rm -rf Pods
+          done
+          exit 1
+      - name: Build for the iOS simulator
+        working-directory: apps/${{ matrix.app }}/ios
+        run: |
+          xcodebuild -workspace "${{ matrix.scheme }}.xcworkspace" -scheme "${{ matrix.scheme }}" \
+            -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$RUNNER_TEMP/dd" CODE_SIGNING_ALLOWED=NO -quiet build

@@ -61,4 +61,11 @@ pnpm format:check
 
 The tests cover the rules and message validation. They do not substitute for a two-phone BLE test: iOS↔iOS and iOS↔Android, win/loss/draw, rematch in either direction, leaving, Bluetooth off, permission denial, backgrounding, and walking out of and back into range.
 
-SDK license: AGPL-3.0-only, with a commercial dual license available from Offline Protocol. See the installed SDK’s license files.
+## Licensing
+
+This example's code is licensed under MIT-0 (see the repository's
+[LICENSE](../../LICENSE)). It depends on `@offline-protocol/mesh-sdk`, which is
+licensed under AGPL-3.0-only or a commercial license from Offline Protocol, Inc.
+An app that embeds the SDK, including one built from this example, is subject to
+the AGPL-3.0-only unless you hold a commercial license. See
+[Licensing](https://www.offlineprotocol.com/docs/operations/licensing).

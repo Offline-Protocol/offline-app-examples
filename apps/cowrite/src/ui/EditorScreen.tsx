@@ -180,7 +180,7 @@ function SyncPill({ online, people }: { online: boolean; people: number }) {
     <View className="bg-teal border-foreground flex-row items-center gap-1.5 rounded-md border-2 px-2.5 py-1">
       <View className="bg-foreground size-2" />
       <Text className="text-xs font-bold uppercase tracking-wider">
-        Synced · {people} {people === 1 ? 'person' : 'people'}
+        Synced, {people} {people === 1 ? 'person' : 'people'}
       </Text>
     </View>
   );

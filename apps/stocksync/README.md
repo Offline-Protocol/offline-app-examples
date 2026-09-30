@@ -91,3 +91,12 @@ pnpm --filter @offline-app-examples/stocksync lint
 ```
 
 The test covers the reducer and message validation, not the Bluetooth link.
+
+## Licensing
+
+This example's code is licensed under MIT-0 (see the repository's
+[LICENSE](../../LICENSE)). It depends on `@offline-protocol/mesh-sdk`, which is
+licensed under AGPL-3.0-only or a commercial license from Offline Protocol, Inc.
+An app that embeds the SDK, including one built from this example, is subject to
+the AGPL-3.0-only unless you hold a commercial license. See
+[Licensing](https://www.offlineprotocol.com/docs/operations/licensing).

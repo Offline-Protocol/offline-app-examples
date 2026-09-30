@@ -247,8 +247,8 @@ export function GameScreen(props: Props) {
             <View className="gap-2 pt-2">
               <Text className={FOOTNOTE}>THREE IN A ROW. ALL THE GLORY.</Text>
               <Text className={FOOTNOTE}>
-                {game.scores.draws} {game.scores.draws === 1 ? 'draw' : 'draws'}{' '}
-                · X and O alternate first move each round
+                {game.scores.draws} {game.scores.draws === 1 ? 'draw' : 'draws'}
+                . X and O alternate first move each round.
               </Text>
             </View>
           )}
