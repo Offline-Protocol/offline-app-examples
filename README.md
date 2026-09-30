@@ -51,6 +51,10 @@ pnpm --filter @offline-app-examples/tictactogether android
 
 ![Stock Sync demo: iOS and Android syncing stock counts](./apps/stocksync/demo.gif)
 
+### Cowrite
+
+![Cowrite demo: iOS and Android editing the same document live](./apps/cowrite/demo.gif)
+
 Shared code lives in [`packages/ui`](./packages/ui) (React Native Reusables components + nearby lobby) and [`packages/mesh`](./packages/mesh) (a small nearby-room wrapper over the SDK).
 
 See each app’s README for platform setup (CocoaPods, signing, etc.).
