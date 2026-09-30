@@ -5,7 +5,7 @@ function Input({ className, ...props }: React.ComponentProps<typeof TextInput> &
   return (
     <TextInput
       className={cn(
-        'dark:bg-input/30 border-input bg-background text-foreground flex h-12 w-full min-w-0 flex-row items-center rounded-xl border px-4 py-1 text-base leading-5',
+        'dark:bg-input/30 border-input bg-card text-foreground flex h-12 w-full min-w-0 flex-row items-center rounded-md border-2 px-4 py-1 font-sans text-base font-medium leading-5',
         props.editable === false &&
         cn(
           'opacity-50',
@@ -17,7 +17,7 @@ function Input({ className, ...props }: React.ComponentProps<typeof TextInput> &
             'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
             'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive'
           ),
-          native: 'placeholder:text-muted-foreground/50',
+          native: 'placeholder:text-muted-foreground/70',
         }),
         className
       )}

@@ -78,6 +78,8 @@ android {
     compileSdk rootProject.ext.compileSdkVersion
 
     namespace "com.offlineappexamples.tictactogether"
+    // Shared fonts (Space Grotesk, DM Serif Display) from the ui package.
+    sourceSets.main.res.srcDirs += "../../../../packages/ui/fonts"
     defaultConfig {
         applicationId "com.offlineappexamples.tictactogether"
         minSdkVersion rootProject.ext.minSdkVersion

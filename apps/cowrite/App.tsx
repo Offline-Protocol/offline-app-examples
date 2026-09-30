@@ -8,7 +8,7 @@ import { EditorScreen } from './src/ui/EditorScreen';
 import { HeroIllustration } from './src/ui/illustrations';
 
 const APP_ID = 'cowrite';
-const GRAPE = '#8A5CD6';
+const GRAPE = '#9E66FF';
 
 export default function App() {
   const [name, setName] = useState('');

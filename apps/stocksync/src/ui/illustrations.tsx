@@ -15,9 +15,9 @@ const C = {
   crustLight: '#F7C98B',
   brown: '#8B5A3C',
   green: '#3DBE6B',
-  sky: '#428BFF',
+  sky: '#4D79FF',
   skyLight: '#DCE8FF',
-  grape: '#8A5CD6',
+  grape: '#9E66FF',
   grapeDark: '#6F45B8',
   white: '#FFFFFF',
 };

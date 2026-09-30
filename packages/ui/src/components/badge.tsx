@@ -6,7 +6,7 @@ import { Platform, View } from 'react-native';
 
 const badgeVariants = cva(
   cn(
-    'border-border group shrink-0 flex-row items-center justify-center gap-1 overflow-hidden rounded-full border px-2 py-0.5',
+    'border-foreground group shrink-0 flex-row items-center justify-center gap-1 overflow-hidden rounded-sm border-2 px-2 py-0.5',
     Platform.select({
       web: 'focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive w-fit whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] [&>svg]:pointer-events-none [&>svg]:size-3',
     })
@@ -15,15 +15,15 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default: cn(
-          'bg-primary border-transparent',
+          'bg-primary',
           Platform.select({ web: '[a&]:hover:bg-primary/90' })
         ),
         secondary: cn(
-          'bg-secondary border-transparent',
+          'bg-secondary',
           Platform.select({ web: '[a&]:hover:bg-secondary/90' })
         ),
         destructive: cn(
-          'bg-destructive border-transparent',
+          'bg-destructive',
           Platform.select({ web: '[a&]:hover:bg-destructive/90' })
         ),
         outline: Platform.select({ web: '[a&]:hover:bg-accent [a&]:hover:text-accent-foreground' }),
@@ -35,7 +35,7 @@ const badgeVariants = cva(
   }
 );
 
-const badgeTextVariants = cva('text-xs font-medium', {
+const badgeTextVariants = cva('text-xs font-bold uppercase tracking-wider', {
   variants: {
     variant: {
       default: 'text-primary-foreground',

@@ -113,7 +113,7 @@ export default function App() {
           title="Stock Sync"
           tagline="Count stock together, even with no signal."
           illustration={<StoreHero />}
-          accentColor="#00A699"
+          accentColor="#10C683"
           status={room.status}
           error={room.error}
           hosts={room.hosts}

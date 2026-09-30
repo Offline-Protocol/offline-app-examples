@@ -18,7 +18,7 @@ import { Button } from './components/button';
 import { Icon } from './components/icon';
 import { Input } from './components/input';
 import { Text } from './components/text';
-import { cn } from './lib/utils';
+import { cn, hardShadow } from './lib/utils';
 
 /** Matches `room.status` from useNearbyRoom, so it can be passed straight in. */
 export type LobbyStatus =
@@ -73,7 +73,7 @@ export type NearbyLobbyProps = {
   tagline?: string;
   /** Hero art shown on the start screen (e.g. an SVG illustration). */
   illustration?: React.ReactNode;
-  /** Any React Native color. Tints the primary buttons and the radar. Defaults to the theme coral. */
+  /** Any bright React Native color (it carries ink text). Fills the hero, primary buttons and radar. Defaults to the theme red. */
   accentColor?: string;
   status: LobbyStatus;
   error?: string;
@@ -96,12 +96,12 @@ export type NearbyLobbyProps = {
   labels?: Partial<NearbyLobbyLabels>;
 };
 
-const CORAL = '#FF385C';
+const RED = '#FF5029';
 const AVATAR_COLORS = ['bg-primary', 'bg-teal', 'bg-sunny', 'bg-sky', 'bg-grape'];
 
 export function NearbyLobby(props: NearbyLobbyProps) {
   const labels = { ...DEFAULT_LABELS, ...props.labels };
-  const accent = props.accentColor ?? CORAL;
+  const accent = props.accentColor ?? RED;
   const { status } = props;
 
   let body: React.ReactNode;
@@ -129,10 +129,16 @@ function Start({ title, tagline, illustration, name, onNameChange, onHost, onDis
   const busy = status === 'starting';
   return (
     <View className="flex-1 px-6">
-      <View className="flex-1 items-center justify-center gap-4">
-        {illustration}
-        <Text className="text-center text-4xl font-extrabold tracking-tight">{title}</Text>
-        {tagline ? <Text className="text-muted-foreground text-center text-lg leading-6">{tagline}</Text> : null}
+      <View className="flex-1 justify-center gap-4">
+        {illustration ? (
+          <View
+            style={[{ backgroundColor: accent }, hardShadow]}
+            className="border-foreground items-center overflow-hidden rounded-lg border-2 py-6">
+            {illustration}
+          </View>
+        ) : null}
+        <Text className="font-serif text-5xl leading-[56px]">{title}</Text>
+        {tagline ? <Text className="text-muted-foreground text-lg font-medium leading-6">{tagline}</Text> : null}
       </View>
       <View className="gap-3 pb-4">
         <Input
@@ -144,8 +150,8 @@ function Start({ title, tagline, illustration, name, onNameChange, onHost, onDis
           editable={!busy}
         />
         {error ? (
-          <View className="bg-destructive/10 rounded-xl px-4 py-3">
-            <Text className="text-destructive text-sm">{error}</Text>
+          <View className="bg-destructive border-foreground rounded-md border-2 px-4 py-3">
+            <Text className="text-destructive-foreground text-sm font-semibold">{error}</Text>
           </View>
         ) : null}
         <Button size="lg" disabled={busy} onPress={onHost} style={{ backgroundColor: accent }}>
@@ -178,17 +184,18 @@ function Scanning({ hosts, onJoin, onCancel, status, joiningId, labels, accent }
               disabled={joining}
               onPress={() => onJoin(host)}
               className={cn(
-                'bg-card border-border flex-row items-center gap-4 rounded-2xl border p-4 shadow-sm shadow-black/5 active:opacity-80',
+                'bg-card border-foreground active:bg-accent flex-row items-center gap-4 rounded-md border-2 p-4',
                 joining && joiningId !== host.id && 'opacity-40',
-              )}>
+              )}
+              style={hardShadow}>
               <PersonAvatar person={host} />
               <View className="flex-1">
-                <Text className="text-base font-semibold" numberOfLines={1}>{host.name}</Text>
-                <Text className="text-muted-foreground text-sm">
+                <Text className="text-lg font-bold" numberOfLines={1}>{host.name}</Text>
+                <Text className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
                   {joining && joiningId === host.id ? `${labels.joining}…` : 'Tap to join'}
                 </Text>
               </View>
-              <Icon as={ChevronRight} size={20} className="text-muted-foreground" />
+              <Icon as={ChevronRight} size={22} className="text-foreground" />
             </Pressable>
           </Animated.View>
         ))}
@@ -206,14 +213,14 @@ function Hosting({ name, peers = [], onCancel, onContinue, status, labels, accen
       <View className="flex-1 items-center justify-center gap-6">
         <Radar color={accent} icon={Users} />
         <View className="items-center gap-2">
-          <Text className="text-muted-foreground text-sm font-semibold uppercase tracking-widest">
+          <Text className="text-xs font-bold uppercase tracking-widest">
             {connected ? labels.connected : labels.hostingTitle}
           </Text>
-          <Text className="text-center text-3xl font-extrabold tracking-tight">
+          <Text className="text-center font-serif text-4xl leading-[48px]">
             {connected ? peers[0]?.name ?? '' : name}
           </Text>
           {connected ? null : (
-            <Text className="text-muted-foreground text-center text-base">
+            <Text className="text-muted-foreground text-center text-base font-medium">
               {peers.length === 0 ? labels.waiting : joined}
             </Text>
           )}
@@ -224,7 +231,7 @@ function Hosting({ name, peers = [], onCancel, onContinue, status, labels, accen
               <Animated.View key={peer.id} entering={FadeInDown.springify()}>
                 <View className="items-center gap-1">
                   <PersonAvatar person={peer} />
-                  <Text className="text-muted-foreground max-w-[72px] text-xs" numberOfLines={1}>{peer.name}</Text>
+                  <Text className="max-w-[72px] text-xs font-semibold" numberOfLines={1}>{peer.name}</Text>
                 </View>
               </Animated.View>
             ))}
@@ -248,7 +255,7 @@ function Hosting({ name, peers = [], onCancel, onContinue, status, labels, accen
 function Header({ title, action, onAction }: { title: string; action: string; onAction: () => void }) {
   return (
     <View className="flex-row items-center justify-between pt-2">
-      <Text className="flex-1 text-2xl font-bold tracking-tight" numberOfLines={1}>{title}</Text>
+      <Text className="flex-1 font-serif text-3xl leading-[40px]" numberOfLines={1}>{title}</Text>
       <Button variant="ghost" size="sm" onPress={onAction}>
         <Text>{action}</Text>
       </Button>
@@ -271,7 +278,7 @@ export function PersonAvatar({ person, className, color }: { person: LobbyPerson
       <AvatarFallback
         className={color ? undefined : AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]}
         style={color ? { backgroundColor: color } : undefined}>
-        <Text className="text-base font-bold text-white">{initials || '?'}</Text>
+        <Text className="text-base font-bold">{initials || '?'}</Text>
       </AvatarFallback>
     </Avatar>
   );
@@ -279,7 +286,7 @@ export function PersonAvatar({ person, className, color }: { person: LobbyPerson
 
 const RADAR_SIZE = 200;
 
-/** Pulsing rings around an icon. Static when the system "Reduce Motion" setting is on. */
+/** Pulsing squares around an icon. Static when the system "Reduce Motion" setting is on. */
 function Radar({ color, icon }: { color: string; icon: React.ComponentProps<typeof Icon>['as'] }) {
   return (
     <View style={{ width: RADAR_SIZE, height: RADAR_SIZE }} className="items-center justify-center">
@@ -287,9 +294,9 @@ function Radar({ color, icon }: { color: string; icon: React.ComponentProps<type
         <Ring key={delay} delay={delay} color={color} />
       ))}
       <View
-        style={{ backgroundColor: color }}
-        className="size-20 items-center justify-center rounded-full shadow-lg shadow-black/20">
-        <Icon as={icon} size={32} className="text-white" />
+        style={[{ backgroundColor: color }, hardShadow]}
+        className="border-foreground size-20 items-center justify-center rounded-lg border-2">
+        <Icon as={icon} size={32} className="text-foreground" />
       </View>
     </View>
   );
@@ -310,14 +317,14 @@ function Ring({ delay, color }: { delay: number; color: string }) {
   }, [delay, progress, reduceMotion]);
 
   const style = useAnimatedStyle(() => ({
-    opacity: 0.35 * (1 - progress.value),
+    opacity: 1 - progress.value,
     transform: [{ scale: 0.35 + progress.value * 0.65 }],
   }));
 
   return (
     <Animated.View
       style={[
-        { position: 'absolute', width: RADAR_SIZE, height: RADAR_SIZE, borderRadius: RADAR_SIZE / 2, backgroundColor: color },
+        { position: 'absolute', width: RADAR_SIZE, height: RADAR_SIZE, borderRadius: 24, borderWidth: 3, borderColor: color },
         style,
       ]}
     />

@@ -4,7 +4,7 @@ import React from 'react';
 import Svg, { Circle, Ellipse, G, Path, Rect } from 'react-native-svg';
 
 const C = {
-  coral: '#FF385C',
+  coral: '#FF5029',
   pink: '#FF8FA3',
   tomato: '#FF5A5F',
   sunny: '#FFAA00',
@@ -14,12 +14,13 @@ const C = {
   patty: '#7A4A2A',
   leaf: '#4CC38A',
   leafDark: '#2FA36B',
-  sky: '#428BFF',
+  sky: '#4D79FF',
   skyLight: '#7FB0FF',
-  grape: '#8A5CD6',
-  teal: '#00A699',
+  grape: '#9E66FF',
+  teal: '#10C683',
   cream: '#FFF4E0',
   white: '#FFFFFF',
+  ink: '#141414',
 };
 
 function Blob({ color }: { color: string }) {
@@ -312,8 +313,8 @@ export function BellArt({ size }: { size: number }) {
         strokeLinecap="round"
         fill="none"
       />
-      <Rect x={14} y={67} width={72} height={9} rx={4.5} fill={C.coral} />
-      <Rect x={20} y={76} width={60} height={6} rx={3} fill={C.tomato} />
+      <Rect x={14} y={67} width={72} height={9} rx={2} fill={C.ink} />
+      <Rect x={20} y={76} width={60} height={6} rx={2} fill={C.ink} />
     </Svg>
   );
 }

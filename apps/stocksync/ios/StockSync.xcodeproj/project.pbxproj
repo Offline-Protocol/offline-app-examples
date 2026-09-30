@@ -9,9 +9,14 @@
 /* Begin PBXBuildFile section */
 		0C80B921A6F3F58F76C31292 /* libPods-StockSync.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5DCACB8F33CDC322A6C60F78 /* libPods-StockSync.a */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
+		14728F469F02C36249A4CE62 /* space_grotesk_regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 470AEAA57240498189D00E89 /* space_grotesk_regular.ttf */; };
+		47B9BC8FE5DD93A1C2DBD04C /* space_grotesk_bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = EA40716FF46DC5BB78B9B152 /* space_grotesk_bold.ttf */; };
+		4A7017F48428F7727F30BA2E /* space_grotesk_semibold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = D6B44B629FD95F9E7A16D97C /* space_grotesk_semibold.ttf */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
+		A367D88F96EE493996098475 /* dm_serif_display_regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = EF94AFB73A02F8549AC8677A /* dm_serif_display_regular.ttf */; };
 		DA29BAF4DFD057FDF2E78B20 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
+		ED223D8463B7C16DE18BACCB /* space_grotesk_medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2A96455357B870CDB2E85231 /* space_grotesk_medium.ttf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -19,12 +24,17 @@
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = StockSync/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = StockSync/Info.plist; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = StockSync/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		2A96455357B870CDB2E85231 /* space_grotesk_medium.ttf */ = {isa = PBXFileReference; includeInIndex = 1; name = space_grotesk_medium.ttf; path = ../../../packages/ui/fonts/font/space_grotesk_medium.ttf; sourceTree = SOURCE_ROOT; };
 		3B4392A12AC88292D35C810B /* Pods-StockSync.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-StockSync.debug.xcconfig"; path = "Target Support Files/Pods-StockSync/Pods-StockSync.debug.xcconfig"; sourceTree = "<group>"; };
+		470AEAA57240498189D00E89 /* space_grotesk_regular.ttf */ = {isa = PBXFileReference; includeInIndex = 1; name = space_grotesk_regular.ttf; path = ../../../packages/ui/fonts/font/space_grotesk_regular.ttf; sourceTree = SOURCE_ROOT; };
 		5709B34CF0A7D63546082F79 /* Pods-StockSync.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-StockSync.release.xcconfig"; path = "Target Support Files/Pods-StockSync/Pods-StockSync.release.xcconfig"; sourceTree = "<group>"; };
 		5DCACB8F33CDC322A6C60F78 /* libPods-StockSync.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-StockSync.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = StockSync/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = StockSync/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		D6B44B629FD95F9E7A16D97C /* space_grotesk_semibold.ttf */ = {isa = PBXFileReference; includeInIndex = 1; name = space_grotesk_semibold.ttf; path = ../../../packages/ui/fonts/font/space_grotesk_semibold.ttf; sourceTree = SOURCE_ROOT; };
+		EA40716FF46DC5BB78B9B152 /* space_grotesk_bold.ttf */ = {isa = PBXFileReference; includeInIndex = 1; name = space_grotesk_bold.ttf; path = ../../../packages/ui/fonts/font/space_grotesk_bold.ttf; sourceTree = SOURCE_ROOT; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
+		EF94AFB73A02F8549AC8677A /* dm_serif_display_regular.ttf */ = {isa = PBXFileReference; includeInIndex = 1; name = dm_serif_display_regular.ttf; path = ../../../packages/ui/fonts/font/dm_serif_display_regular.ttf; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -75,6 +85,7 @@
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				BBD78D7AC51CEA395F1C20DB /* Pods */,
+				DACFE45D183670C3EC3BCF63 /* Fonts */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -96,6 +107,18 @@
 				5709B34CF0A7D63546082F79 /* Pods-StockSync.release.xcconfig */,
 			);
 			path = Pods;
+			sourceTree = "<group>";
+		};
+		DACFE45D183670C3EC3BCF63 /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				EF94AFB73A02F8549AC8677A /* dm_serif_display_regular.ttf */,
+				EA40716FF46DC5BB78B9B152 /* space_grotesk_bold.ttf */,
+				2A96455357B870CDB2E85231 /* space_grotesk_medium.ttf */,
+				470AEAA57240498189D00E89 /* space_grotesk_regular.ttf */,
+				D6B44B629FD95F9E7A16D97C /* space_grotesk_semibold.ttf */,
+			);
+			name = Fonts;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -161,6 +184,11 @@
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				DA29BAF4DFD057FDF2E78B20 /* PrivacyInfo.xcprivacy in Resources */,
+				A367D88F96EE493996098475 /* dm_serif_display_regular.ttf in Resources */,
+				47B9BC8FE5DD93A1C2DBD04C /* space_grotesk_bold.ttf in Resources */,
+				ED223D8463B7C16DE18BACCB /* space_grotesk_medium.ttf in Resources */,
+				14728F469F02C36249A4CE62 /* space_grotesk_regular.ttf in Resources */,
+				4A7017F48428F7727F30BA2E /* space_grotesk_semibold.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

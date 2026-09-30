@@ -1,4 +1,4 @@
-import { Button, cn, Text } from '@offline-app-examples/ui';
+import { Button, cn, hardShadow, Text } from '@offline-app-examples/ui';
 import React, { useState } from 'react';
 import { Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
 import Animated, {
@@ -13,10 +13,25 @@ import { BellArt, FoodArt } from './illustrations';
 
 const COLUMNS: Status[] = ['new', 'cooking', 'ready'];
 
-const ACTION: Record<Status, { label: string; className: string }> = {
-  new: { label: 'Start cooking', className: 'bg-sunny active:bg-sunny/90' },
-  cooking: { label: 'Mark ready', className: 'bg-teal active:bg-teal/90' },
-  ready: { label: 'Clear', className: 'bg-foreground active:bg-foreground/90' },
+const ACTION: Record<
+  Status,
+  { label: string; className: string; text: string }
+> = {
+  new: {
+    label: 'Start cooking',
+    className: 'bg-sunny active:bg-sunny/90',
+    text: 'text-foreground',
+  },
+  cooking: {
+    label: 'Mark ready',
+    className: 'bg-teal active:bg-teal/90',
+    text: 'text-foreground',
+  },
+  ready: {
+    label: 'Clear',
+    className: 'bg-foreground active:bg-foreground/90',
+    text: 'text-background',
+  },
 };
 
 type Props = {
@@ -53,28 +68,28 @@ export function KitchenScreen({
   );
 
   return (
-    <SafeAreaView className="bg-secondary flex-1" edges={['top', 'bottom']}>
-      <View className="bg-background">
-        <TopBar
-          eyebrow={waiting}
-          title={name}
-          people={waiters}
-          onLeave={onLeave}
-        />
-      </View>
+    <SafeAreaView className="bg-background flex-1" edges={['top', 'bottom']}>
+      <TopBar
+        eyebrow={waiting}
+        title={name}
+        people={waiters}
+        onLeave={onLeave}
+      />
 
       {kitchen.orders.length === 0 ? (
         <View className="flex-1 items-center justify-center gap-3 px-8">
           <BellArt size={140} />
-          <Text className="text-xl font-bold">No orders yet</Text>
-          <Text className="text-muted-foreground text-center">
+          <Text className="font-serif text-3xl leading-[38px]">
+            No orders yet
+          </Text>
+          <Text className="text-muted-foreground text-center font-medium">
             Tickets appear here the moment a waiter sends them.
           </Text>
         </View>
       ) : wide ? (
         <View className="flex-1 flex-row">
           {COLUMNS.map((status) => (
-            <View key={status} className="border-border flex-1 border-r">
+            <View key={status} className="border-foreground flex-1 border-r-2">
               <ColumnHeader status={status} count={byStatus(status).length} />
               {column(status)}
             </View>
@@ -90,11 +105,12 @@ export function KitchenScreen({
                 accessibilityRole="tab"
                 accessibilityState={{ selected: filter === status }}
                 className={cn(
-                  'flex-1 rounded-2xl',
+                  'flex-1 rounded-md border-2',
                   filter === status
-                    ? 'bg-background shadow-sm shadow-black/10'
-                    : 'active:bg-background/60',
+                    ? 'bg-card border-foreground'
+                    : 'active:bg-card border-transparent',
                 )}
+                style={filter === status ? hardShadow : undefined}
               >
                 <ColumnHeader status={status} count={byStatus(status).length} />
               </Pressable>
@@ -110,10 +126,16 @@ export function KitchenScreen({
 function ColumnHeader({ status, count }: { status: Status; count: number }) {
   const s = STATUS_STYLE[status];
   return (
-    <View className="flex-row items-center justify-center gap-2 px-4 py-3">
-      <View className={cn('size-2.5 rounded-full', s.dot)} />
-      <Text className="font-bold">{s.label}</Text>
-      <View className={cn('min-w-6 items-center rounded-full px-2', s.bg)}>
+    <View className="flex-row items-center justify-center gap-2 px-3 py-3">
+      <Text className="text-sm font-bold uppercase tracking-wider">
+        {s.label}
+      </Text>
+      <View
+        className={cn(
+          'border-foreground min-w-6 items-center rounded-sm border-2 px-1.5',
+          s.bg,
+        )}
+      >
         <Text className={cn('text-xs font-bold leading-5', s.text)}>
           {count}
         </Text>
@@ -137,16 +159,22 @@ function Ticket({
     <Animated.View
       entering={FadeInDown.duration(350)}
       layout={LinearTransition}
+      className="rounded-lg"
+      style={hardShadow}
     >
-      <View className="bg-card border-border overflow-hidden rounded-3xl border shadow-sm shadow-black/5">
+      <View className="bg-card border-foreground overflow-hidden rounded-lg border-2">
         <View
           className={cn(
-            'flex-row items-center justify-between px-4 py-3',
+            'border-foreground flex-row items-center justify-between border-b-2 px-4 py-2.5',
             s.bg,
           )}
         >
-          <Text className="text-xl font-extrabold">Table {order.table}</Text>
-          <Text className={cn('text-sm font-semibold', s.text)}>
+          <Text className="font-serif text-2xl leading-[32px]">
+            Table {order.table}
+          </Text>
+          <Text
+            className={cn('text-xs font-bold uppercase tracking-wider', s.text)}
+          >
             {timeAgo(order.placedAt, now)}
           </Text>
         </View>
@@ -154,18 +182,18 @@ function Ticket({
           {order.items.map((line) => (
             <View key={line.itemId} className="flex-row items-center gap-3">
               <FoodArt itemId={line.itemId} size={40} />
-              <Text className="w-8 text-lg font-extrabold">{line.qty}×</Text>
+              <Text className="w-8 text-lg font-bold">{line.qty}×</Text>
               <Text className="flex-1 text-base font-medium">
                 {menuItem(line.itemId)?.name ?? line.itemId}
               </Text>
             </View>
           ))}
           {order.note ? (
-            <View className="bg-sunny/10 rounded-xl px-3 py-2">
-              <Text className="text-sm italic">“{order.note}”</Text>
+            <View className="bg-sunny border-foreground rounded-md border-2 px-3 py-2">
+              <Text className="text-sm font-medium">“{order.note}”</Text>
             </View>
           ) : null}
-          <Text className="text-muted-foreground text-xs">
+          <Text className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
             From {order.waiter}
           </Text>
         </View>
@@ -173,7 +201,7 @@ function Ticket({
           className={cn('m-4', action.className)}
           onPress={() => onAdvance(order.id, order.status)}
         >
-          <Text className="text-white">{action.label}</Text>
+          <Text className={action.text}>{action.label}</Text>
         </Button>
       </View>
     </Animated.View>

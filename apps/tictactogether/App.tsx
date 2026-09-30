@@ -151,7 +151,7 @@ export default function App() {
           title="Tic Tac Together"
           tagline="A classic game. A nearby friend. No internet needed."
           illustration={
-            <View className="mb-3 w-[190px]">
+            <View className="my-2 w-[190px]">
               <Board
                 board={['X', null, 'O', null, 'X', null, 'O', null, 'X']}
                 line={[]}

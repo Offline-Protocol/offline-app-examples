@@ -2,13 +2,14 @@ import React from 'react';
 import Svg, { Circle, G, Path, Polygon, Rect } from 'react-native-svg';
 
 // Flat illustrations drawn for Cowrite, in the theme's accent colors.
-const CORAL = '#FF385C';
-const TEAL = '#00A699';
-const SUNNY = '#FFAA00';
-const SKY = '#428BFF';
-const GRAPE = '#8A5CD6';
-const INK = '#222222';
-const LINE = '#DDDDDD';
+const CORAL = '#FF5029';
+const TEAL = '#10C683';
+const SUNNY = '#FFC929';
+const SKY = '#4D79FF';
+const GRAPE = '#9E66FF';
+const INK = '#141414';
+const LINE = '#E6DFD0';
+const PAPER = '#FCF9F3';
 
 /** A pencil lying at an angle, its tip at (x, y). */
 function Pencil({
@@ -58,9 +59,8 @@ export function HeroIllustration({ size = 240 }: { size?: number }) {
         y={36}
         width={104}
         height={134}
-        rx={12}
+        rx={4}
         fill={SKY}
-        opacity={0.3}
         transform="rotate(-8 116 103)"
       />
       <Rect
@@ -68,10 +68,10 @@ export function HeroIllustration({ size = 240 }: { size?: number }) {
         y={40}
         width={108}
         height={138}
-        rx={12}
-        fill="#FFFFFF"
-        stroke="#EBEBEB"
-        strokeWidth={2}
+        rx={4}
+        fill={PAPER}
+        stroke={INK}
+        strokeWidth={2.5}
       />
       <Rect x={92} y={58} width={56} height={9} rx={4.5} fill={INK} />
       <Rect
@@ -111,9 +111,9 @@ export function EmptyDocIllustration({ size = 150 }: { size?: number }) {
         y={18}
         width={60}
         height={80}
-        rx={9}
-        fill="#FFFFFF"
-        stroke="#E4E4E4"
+        rx={4}
+        fill={PAPER}
+        stroke={INK}
         strokeWidth={2}
       />
       <Rect

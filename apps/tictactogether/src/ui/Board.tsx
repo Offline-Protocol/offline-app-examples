@@ -1,4 +1,4 @@
-import { cn } from '@offline-app-examples/ui';
+import { cn, INK } from '@offline-app-examples/ui';
 import React, { useEffect } from 'react';
 import { Pressable, View } from 'react-native';
 import Animated, {
@@ -12,8 +12,8 @@ import Animated, {
 import Svg, { Circle, Line, Path } from 'react-native-svg';
 import type { Cell, Mark } from '../domain/game';
 
-// Same as `coral` and `plum` in tailwind.config.js; SVG strokes need plain values.
-export const MARK_COLOR: Record<Mark, string> = { X: '#F07869', O: '#8B78D5' };
+// The theme's `primary` and `sky`; SVG strokes need plain values.
+export const MARK_COLOR: Record<Mark, string> = { X: '#FF5029', O: '#4D79FF' };
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
@@ -53,8 +53,8 @@ export function MarkArt({
   }));
   const stroke = {
     stroke: MARK_COLOR[mark],
-    strokeWidth: 11,
-    strokeLinecap: 'round' as const,
+    strokeWidth: 12,
+    strokeLinecap: 'butt' as const,
     fill: 'none',
   };
   return (
@@ -106,7 +106,7 @@ export function Board({ board, line, onMove, decorative = false }: BoardProps) {
   return (
     <View
       className={cn(
-        'bg-sand aspect-square w-full flex-row flex-wrap content-between justify-between rounded-[30px] p-[3%]',
+        'bg-foreground aspect-square w-full flex-row flex-wrap content-between justify-between rounded-lg p-[3%]',
         decorative && 'rotate-[-9deg]',
       )}
     >
@@ -118,8 +118,8 @@ export function Board({ board, line, onMove, decorative = false }: BoardProps) {
           disabled={!onMove || !!mark}
           onPress={() => onMove?.(i)}
           className={cn(
-            'active:bg-lavender h-[31.33%] w-[31.33%] items-center justify-center rounded-[20px] bg-white',
-            line.includes(i) && 'bg-[#E1EDDF]',
+            'bg-card active:bg-accent h-[31.33%] w-[31.33%] items-center justify-center rounded-sm',
+            line.includes(i) && 'bg-sunny',
           )}
         >
           {mark && (
@@ -153,9 +153,9 @@ function WinLine({ line }: { line: number[] }) {
           y1={y(a)}
           x2={x(b)}
           y2={y(b)}
-          stroke="#567C62"
-          strokeWidth={5}
-          strokeLinecap="round"
+          stroke={INK}
+          strokeWidth={6}
+          strokeLinecap="square"
           strokeDasharray="300"
           animatedProps={props}
         />

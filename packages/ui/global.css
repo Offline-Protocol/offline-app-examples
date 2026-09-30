@@ -6,34 +6,37 @@
  * Theme tokens (HSL channels, RN Reusables convention). Light theme only.
  * Use them through the tailwind classes in tailwind-preset.js, e.g.
  * `bg-primary`, `text-muted-foreground`, `bg-teal/10`.
+ *
+ * Loud and flat: beige paper, ink borders, saturated fills. Every fill below
+ * carries ink text (4.5:1 or better), so buttons and chips stay readable.
  */
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 13%; /* #222222 */
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 13%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 13%;
-    --primary: 350 100% 61%; /* coral #FF385C */
-    --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 97%; /* #F7F7F7 */
-    --secondary-foreground: 0 0% 13%;
-    --muted: 0 0% 97%;
-    --muted-foreground: 0 0% 42%; /* #6A6A6A */
-    --accent: 350 100% 97%; /* coral tint, used for selected/pressed */
-    --accent-foreground: 350 75% 42%;
-    --destructive: 11 80% 42%; /* #C13515 */
+    --background: 40 45% 92%; /* beige paper #F4EEE1 */
+    --foreground: 0 0% 8%; /* ink #141414 */
+    --card: 40 60% 97%; /* off-white #FCF9F3 */
+    --card-foreground: 0 0% 8%;
+    --popover: 40 60% 97%;
+    --popover-foreground: 0 0% 8%;
+    --primary: 11 100% 58%; /* red-orange #FF5029 */
+    --primary-foreground: 0 0% 8%;
+    --secondary: 40 30% 86%; /* sand #E6DFD0 */
+    --secondary-foreground: 0 0% 8%;
+    --muted: 40 30% 86%;
+    --muted-foreground: 30 8% 34%; /* #5E5850 */
+    --accent: 45 100% 58%; /* yellow, used for selected/pressed */
+    --accent-foreground: 0 0% 8%;
+    --destructive: 4 75% 49%; /* #DB2C1F */
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 92%; /* #EBEBEB */
-    --input: 0 0% 87%; /* #DDDDDD */
-    --ring: 350 100% 61%;
-    --radius: 0.875rem;
+    --border: 0 0% 8%;
+    --input: 0 0% 8%;
+    --ring: 0 0% 8%;
+    --radius: 0.375rem;
 
-    /* Friendly accents for categories, avatars and illustrations. */
-    --teal: 175 100% 33%; /* #00A699 */
-    --sunny: 40 100% 50%; /* #FFAA00 */
-    --sky: 217 100% 63%; /* #428BFF */
-    --grape: 265 60% 58%; /* #8A5CD6 */
+    /* Loud accents for categories, avatars and illustrations. */
+    --teal: 158 85% 42%; /* #10C683 */
+    --sunny: 45 100% 58%; /* #FFC929 */
+    --sky: 225 100% 65%; /* #4D79FF */
+    --grape: 262 100% 70%; /* #9E66FF */
   }
 }

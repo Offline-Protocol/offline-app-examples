@@ -29,6 +29,12 @@ module.exports = {
         sky: color('sky'),
         grape: color('grape'),
       },
+      // Registered natively in each app (see packages/ui/fonts). Serif is display only:
+      // it ships one weight, so pair it with font-normal to avoid a faux bold on Android.
+      fontFamily: {
+        sans: ['Space Grotesk'],
+        serif: ['DM Serif Display'],
+      },
       borderRadius: {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',

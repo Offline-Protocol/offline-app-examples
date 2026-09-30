@@ -1,4 +1,4 @@
-import { Button, cn, Text } from '@offline-app-examples/ui';
+import { Button, cn, hardShadow, Text } from '@offline-app-examples/ui';
 import React, { useEffect, useRef } from 'react';
 import { ScrollView, View } from 'react-native';
 import { trigger } from 'react-native-haptic-feedback';
@@ -43,21 +43,22 @@ const OUTCOME: Record<
   win: {
     title: 'You won! 🎉',
     subtitle: 'Three in a row. Look at you go.',
-    bg: 'bg-[#F7E9D6]',
+    bg: 'bg-sunny',
   },
   loss: {
     title: 'So close!',
     subtitle: 'A tiny rain cloud. A fresh chance next round.',
-    bg: 'bg-[#EDEAF7]',
+    bg: 'bg-sky',
   },
   draw: {
     title: 'It’s a draw 🤝',
     subtitle: 'Great minds block alike.',
-    bg: 'bg-[#E5EFE4]',
+    bg: 'bg-teal',
   },
 };
 
-const FOOTNOTE = 'text-muted-foreground text-center text-xs leading-5';
+const FOOTNOTE =
+  'text-muted-foreground text-center text-xs font-medium leading-5';
 const haptic = () => trigger('impactLight');
 
 export function GameScreen(props: Props) {
@@ -94,23 +95,16 @@ export function GameScreen(props: Props) {
   else status = 'Their turn. Plot your next move.';
 
   return (
-    <SafeAreaView className="bg-paper flex-1">
+    <SafeAreaView className="bg-background flex-1">
       <ScrollView
         contentContainerClassName="w-full max-w-[460px] grow self-center px-6 pb-4 pt-3"
         showsVerticalScrollIndicator={false}
       >
         <View className="mb-7 flex-row items-center justify-between">
-          <Text className="font-extrabold tracking-tight">
-            ✳ little rivalry
-          </Text>
-          <View className="bg-sand flex-row items-center gap-1.5 rounded-full px-2.5 py-1.5">
-            <View
-              className={cn(
-                'size-1.5 rounded-full',
-                away ? 'bg-coral' : 'bg-[#78A389]',
-              )}
-            />
-            <Text className="text-muted-foreground text-[9px] font-extrabold tracking-widest">
+          <Text className="font-serif text-2xl">✳ little rivalry</Text>
+          <View className="bg-card border-foreground flex-row items-center gap-1.5 rounded-sm border-2 px-2 py-1">
+            <View className={cn('size-2', away ? 'bg-primary' : 'bg-teal')} />
+            <Text className="text-[10px] font-bold tracking-widest">
               {away ? 'RECONNECTING' : 'CONNECTED'}
             </Text>
           </View>
@@ -118,7 +112,7 @@ export function GameScreen(props: Props) {
 
         <Animated.View entering={FadeInDown.springify()} className="gap-4">
           <View className="flex-row items-center justify-between">
-            <Text className="text-muted-foreground text-[10px] font-bold tracking-[2px]">
+            <Text className="text-[10px] font-bold tracking-[2px]">
               THE FRIENDLY FACE-OFF
             </Text>
             <Text className="text-muted-foreground text-xs font-bold">
@@ -133,34 +127,30 @@ export function GameScreen(props: Props) {
                 <View
                   key={mark}
                   className={cn(
-                    'bg-sand flex-1 items-center rounded-3xl border-[1.5px] border-transparent px-2 py-4',
-                    active && 'border-plum/50 bg-lavender',
+                    'bg-card border-foreground flex-1 items-center rounded-lg border-2 px-2 py-4',
+                    active && 'bg-accent',
                   )}
+                  style={active ? hardShadow : undefined}
                 >
-                  <View
-                    className={cn(
-                      'mb-2 size-[53px] items-center justify-center rounded-[18px]',
-                      mark === 'X' ? 'bg-coral/20' : 'bg-lavender',
-                    )}
-                  >
+                  <View className="bg-card border-foreground mb-2 size-[53px] items-center justify-center rounded-md border-2">
                     <MarkArt mark={mark} size={45} animate={false} />
                   </View>
                   <Text className="text-sm font-bold" numberOfLines={1}>
                     {mark === me ? 'You' : rivalName}
                   </Text>
-                  <Text className="mt-1 text-xl font-extrabold">
+                  <Text className="mt-1 text-2xl font-bold">
                     {game.scores[mark]}{' '}
                     <Text className="text-muted-foreground text-xs font-medium">
                       wins
                     </Text>
                   </Text>
                   {active && (
-                    <View className="bg-plum absolute right-3 top-3 size-1.5 rounded-full" />
+                    <View className="bg-foreground absolute right-3 top-3 size-2" />
                   )}
                 </View>
               );
             })}
-            <Text className="bg-paper text-muted-foreground absolute left-1/2 top-[62px] -ml-3.5 w-7 rounded-full py-1 text-center text-xs">
+            <Text className="bg-foreground text-background absolute left-1/2 top-[62px] -ml-4 w-8 rounded-sm py-1 text-center text-xs font-bold uppercase">
               vs
             </Text>
           </View>
@@ -171,7 +161,7 @@ export function GameScreen(props: Props) {
           >
             <Text className="flex-1 text-sm font-semibold">{status}</Text>
             {!finished && !away && (
-              <Text className="text-plum text-2xl">{myTurn ? '✦' : '◌'}</Text>
+              <Text className="text-2xl">{myTurn ? '✦' : '◌'}</Text>
             )}
           </View>
 
@@ -189,17 +179,21 @@ export function GameScreen(props: Props) {
             <Animated.View
               key={`${game.round}-${outcome}`}
               entering={FadeInDown.springify()}
-              className={cn('gap-3 rounded-3xl p-5', OUTCOME[outcome].bg)}
+              className={cn(
+                'border-foreground gap-3 rounded-lg border-2 p-5',
+                OUTCOME[outcome].bg,
+              )}
+              style={hardShadow}
             >
               <Celebration outcome={outcome} />
               <Text
                 accessibilityRole="header"
                 accessibilityLiveRegion="polite"
-                className="text-center text-3xl font-extrabold tracking-tight"
+                className="text-center font-serif text-4xl leading-[44px]"
               >
                 {OUTCOME[outcome].title}
               </Text>
-              <Text className={cn(FOOTNOTE, 'mb-1')}>
+              <Text className={cn(FOOTNOTE, 'text-foreground mb-1')}>
                 {OUTCOME[outcome].subtitle}
               </Text>
               {game.rematch === them ? (
@@ -214,12 +208,12 @@ export function GameScreen(props: Props) {
                       disabled={blocked}
                       onPress={() => act({ kind: 'accept' })}
                     >
-                      <Text>Accept</Text>
+                      <Text className="text-background">Accept</Text>
                     </Button>
                     <Button
                       size="lg"
                       variant="secondary"
-                      className="bg-sand flex-1"
+                      className="bg-card flex-1"
                       disabled={blocked}
                       onPress={() => act({ kind: 'decline' })}
                     >
@@ -235,14 +229,14 @@ export function GameScreen(props: Props) {
                     disabled={blocked || game.rematch === me}
                     onPress={() => act({ kind: 'rematch' })}
                   >
-                    <Text>
+                    <Text className="text-background">
                       {game.rematch === me
                         ? 'Rematch requested…'
                         : 'One more round?  ↻'}
                     </Text>
                   </Button>
                   {game.declined && (
-                    <Text className={FOOTNOTE}>
+                    <Text className={cn(FOOTNOTE, 'text-foreground')}>
                       Rematch declined. Thanks for playing together!
                     </Text>
                   )}
@@ -267,10 +261,10 @@ export function GameScreen(props: Props) {
         </Animated.View>
 
         <View className="mt-auto flex-row justify-between pt-6">
-          <Text className="text-[9px] text-[#A49FAB]">
+          <Text className="text-muted-foreground text-[10px] font-medium">
             ✳ powered by Offline Protocol
           </Text>
-          <Text className="tracking-[3px] text-[#C4BDCE]">•••</Text>
+          <Text className="text-muted-foreground tracking-[3px]">•••</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -313,13 +307,13 @@ function Celebration({ outcome }: { outcome: Outcome }) {
         {outcome === 'loss' ? '🌧️' : '🤝'}
       </Animated.Text>
       {outcome === 'loss' && (
-        <Text className="text-plum absolute top-10 text-2xl">﹏ ﹏ ﹏</Text>
+        <Text className="absolute top-10 text-2xl">﹏ ﹏ ﹏</Text>
       )}
     </View>
   );
 }
 
-const CONFETTI = [MARK_COLOR.X, MARK_COLOR.O, '#E9BF58', '#75B79D'];
+const CONFETTI = [MARK_COLOR.X, MARK_COLOR.O, '#9E66FF', '#141414'];
 
 // One piece; `i` spreads the pieces out in position, size, speed and spin.
 function Confetto({ i, p }: { i: number; p: SharedValue<number> }) {
@@ -340,7 +334,7 @@ function Confetto({ i, p }: { i: number; p: SharedValue<number> }) {
     left: `${(i * 37) % 100}%` as const,
     width: i % 2 ? 7 : 10,
     height: i % 2 ? 14 : 7,
-    borderRadius: i % 3 ? 2 : 8,
+    borderRadius: i % 3 ? 0 : 2,
     backgroundColor: CONFETTI[i % 4],
   };
   return <Animated.View className="absolute" style={[piece, fall]} />;

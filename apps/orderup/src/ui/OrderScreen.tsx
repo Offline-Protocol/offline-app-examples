@@ -1,4 +1,11 @@
-import { Button, cn, Icon, Input, Text } from '@offline-app-examples/ui';
+import {
+  Button,
+  cn,
+  hardShadow,
+  Icon,
+  Input,
+  Text,
+} from '@offline-app-examples/ui';
 import { Minus, Plus, WifiOff } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
@@ -58,7 +65,7 @@ export function OrderScreen({
   const menu = (
     <>
       <TablePicker table={table} onPick={setTable} />
-      <Text className="px-5 pb-1 pt-6 text-lg font-bold">Menu</Text>
+      <Text className="px-5 pb-1 pt-6 font-serif text-2xl">Menu</Text>
       <View className="flex-row flex-wrap px-3.5">
         {MENU.map((item) => (
           <View key={item.id} className={cn('p-1.5', wide ? 'w-1/4' : 'w-1/2')}>
@@ -94,9 +101,9 @@ export function OrderScreen({
         onLeave={onLeave}
       />
       {connected ? null : (
-        <View className="bg-sunny/15 flex-row items-center gap-2 px-5 py-2">
-          <Icon as={WifiOff} size={16} className="text-[#9A6200]" />
-          <Text className="text-sm font-semibold text-[#9A6200]">
+        <View className="bg-sunny border-foreground flex-row items-center gap-2 border-b-2 px-5 py-2">
+          <Icon as={WifiOff} size={16} className="text-foreground" />
+          <Text className="shrink text-sm font-semibold">
             Reconnecting to kitchen… orders will send when it is back.
           </Text>
         </View>
@@ -107,7 +114,7 @@ export function OrderScreen({
             {menu}
           </ScrollView>
           <ScrollView
-            className="bg-secondary w-96 flex-none"
+            className="bg-secondary border-foreground w-96 flex-none border-l-2"
             contentContainerClassName="pb-10"
           >
             {side}
@@ -132,7 +139,7 @@ function TablePicker({
 }) {
   return (
     <View className="gap-3 px-5 pt-4">
-      <Text className="text-lg font-bold">Table</Text>
+      <Text className="font-serif text-2xl">Table</Text>
       <View className="flex-row flex-wrap gap-2">
         {Array.from({ length: TABLES }, (_, i) => i + 1).map((t) => (
           <Pressable
@@ -142,17 +149,11 @@ function TablePicker({
             accessibilityState={{ selected: table === t }}
             accessibilityLabel={`Table ${t}`}
             className={cn(
-              'size-12 items-center justify-center rounded-2xl border',
-              table === t
-                ? 'bg-primary border-primary'
-                : 'border-border bg-background active:bg-accent',
+              'border-foreground size-12 items-center justify-center rounded-md border-2',
+              table === t ? 'bg-primary' : 'bg-card active:bg-accent',
             )}
           >
-            <Text
-              className={cn('text-base font-bold', table === t && 'text-white')}
-            >
-              {t}
-            </Text>
+            <Text className="text-base font-bold">{t}</Text>
           </Pressable>
         ))}
       </View>
@@ -175,12 +176,13 @@ function MenuCard({
       onPress={() => onChange(itemId, 1)}
       accessibilityLabel={`Add ${item.name}`}
       className={cn(
-        'bg-card items-center gap-1 rounded-3xl border p-3 active:opacity-80',
-        qty > 0 ? 'border-primary bg-accent' : 'border-border',
+        'border-foreground items-center gap-1 rounded-lg border-2 p-3 active:opacity-80',
+        qty > 0 ? 'bg-accent' : 'bg-card',
       )}
+      style={hardShadow}
     >
       <FoodArt itemId={itemId} size={84} />
-      <Text className="text-base font-semibold">{item.name}</Text>
+      <Text className="text-base font-bold">{item.name}</Text>
       <View className="h-9 flex-row items-center gap-3">
         {qty > 0 ? (
           <>
@@ -199,7 +201,9 @@ function MenuCard({
             />
           </>
         ) : (
-          <Text className="text-muted-foreground">${item.price}</Text>
+          <Text className="text-muted-foreground font-semibold">
+            ${item.price}
+          </Text>
         )}
       </View>
     </Pressable>
@@ -220,9 +224,9 @@ function Stepper({
       onPress={onPress}
       hitSlop={8}
       accessibilityLabel={label}
-      className="bg-primary size-8 items-center justify-center rounded-full active:opacity-80"
+      className="bg-foreground size-8 items-center justify-center rounded-md active:opacity-80"
     >
-      <Icon as={icon} size={16} className="text-white" />
+      <Icon as={icon} size={16} className="text-background" />
     </Pressable>
   );
 }
@@ -251,7 +255,7 @@ function CartPanel({
       : null;
   return (
     <View className="gap-3 px-5 pt-6">
-      <Text className="text-lg font-bold">
+      <Text className="font-serif text-2xl">
         {table ? `Order for table ${table}` : 'New order'}
       </Text>
       {items.map((l) => (
@@ -284,7 +288,7 @@ function MyOrders({ waiter }: { waiter: WaiterState }) {
   if (waiter.mine.length === 0) return null;
   return (
     <View className="gap-3 px-5 pt-8">
-      <Text className="text-lg font-bold">My orders</Text>
+      <Text className="font-serif text-2xl">My orders</Text>
       {waiter.mine.slice(0, 12).map((order) => {
         const status = statusOf(waiter, order.id);
         return (
@@ -292,10 +296,11 @@ function MyOrders({ waiter }: { waiter: WaiterState }) {
             key={order.id}
             entering={FadeInDown}
             className={cn(
-              'bg-card flex-row items-center gap-3 rounded-2xl border p-3',
-              status === 'ready' ? 'border-teal' : 'border-border',
+              'bg-card border-foreground flex-row items-center gap-3 rounded-md border-2 p-3',
               status === 'served' && 'opacity-60',
             )}
+            // Ready orders pop up off the page.
+            style={status === 'ready' ? hardShadow : undefined}
           >
             <View className="flex-1 gap-0.5">
               <Text className="font-bold">

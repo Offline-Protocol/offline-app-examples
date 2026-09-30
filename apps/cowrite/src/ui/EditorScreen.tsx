@@ -1,4 +1,10 @@
-import { Button, Icon, PersonAvatar, Text } from '@offline-app-examples/ui';
+import {
+  Button,
+  hardShadow,
+  Icon,
+  PersonAvatar,
+  Text,
+} from '@offline-app-examples/ui';
 import { ChevronLeft, CloudOff } from 'lucide-react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import {
@@ -17,9 +23,9 @@ import { EmptyDocIllustration } from './illustrations';
 // Everyone gets their own color: sort the ids of the people in the doc and hand out colors
 // in that order. Every phone sorts the same ids, so everyone agrees on who is which color.
 // Unique for up to 5 people, more than a BLE room holds.
-const COLORS = ['#FF385C', '#00A699', '#FFAA00', '#428BFF', '#8A5CD6'];
+const COLORS = ['#FF5029', '#10C683', '#FFC929', '#4D79FF', '#9E66FF'];
 // Shared by the input and its cursor mirror, so both wrap the text identically.
-const TEXT_CLASS = 'p-0 text-[17px] leading-[26px]';
+const TEXT_CLASS = 'p-0 font-sans text-[17px] leading-[26px]';
 
 type Props = {
   space: string;
@@ -60,7 +66,7 @@ export function EditorScreen({ space, me, changes, online, onLeave }: Props) {
   };
 
   return (
-    <SafeAreaView className="bg-secondary flex-1" edges={['top', 'bottom']}>
+    <SafeAreaView className="bg-background flex-1" edges={['top', 'bottom']}>
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -82,10 +88,10 @@ export function EditorScreen({ space, me, changes, online, onLeave }: Props) {
           value={doc.title}
           onChangeText={doc.onTitleChange}
           placeholder="Untitled document"
-          placeholderTextColor="#B0B0B0"
+          placeholderTextColor="#9A9284"
           maxLength={80}
           returnKeyType="done"
-          className="text-foreground px-5 pb-1 pt-3 text-3xl font-extrabold tracking-tight"
+          className="text-foreground px-5 pb-1 pt-3 font-serif text-4xl"
         />
 
         <ScrollView
@@ -104,14 +110,17 @@ export function EditorScreen({ space, me, changes, online, onLeave }: Props) {
           ))}
         </ScrollView>
 
-        <View className="bg-card border-border mx-3 mb-2 mt-1 flex-1 rounded-3xl border px-5 pb-3 pt-4 shadow-md shadow-black/5">
+        <View
+          className="bg-card border-foreground mb-3 ml-3 mr-4 mt-1 flex-1 rounded-lg border-2 px-5 pb-3 pt-4"
+          style={hardShadow}
+        >
           {doc.text === '' ? (
             <View
               pointerEvents="none"
               className="absolute inset-0 items-center justify-center gap-2"
             >
               <EmptyDocIllustration />
-              <Text className="text-muted-foreground text-sm">
+              <Text className="text-muted-foreground text-sm font-medium">
                 A blank page. Tap to start writing.
               </Text>
             </View>
@@ -147,7 +156,7 @@ export function EditorScreen({ space, me, changes, online, onLeave }: Props) {
               className={`text-foreground flex-1 ${TEXT_CLASS}`}
             />
           </View>
-          <Text className="text-muted-foreground pt-2 text-right text-xs">
+          <Text className="text-muted-foreground pt-2 text-right text-xs font-semibold uppercase tracking-wider">
             {wordCount(doc.text)} {wordCount(doc.text) === 1 ? 'word' : 'words'}
           </Text>
         </View>
@@ -159,18 +168,18 @@ export function EditorScreen({ space, me, changes, online, onLeave }: Props) {
 function SyncPill({ online, people }: { online: boolean; people: number }) {
   if (!online) {
     return (
-      <View className="bg-sunny/15 ml-2 shrink flex-row items-center gap-1.5 rounded-full px-3 py-1.5">
+      <View className="bg-sunny border-foreground ml-2 shrink flex-row items-center gap-1.5 rounded-md border-2 px-2.5 py-1">
         <Icon as={CloudOff} size={14} className="text-foreground" />
-        <Text className="shrink text-xs font-semibold" numberOfLines={1}>
+        <Text className="shrink text-xs font-bold" numberOfLines={1}>
           Offline - edits will sync when nearby
         </Text>
       </View>
     );
   }
   return (
-    <View className="bg-teal/10 flex-row items-center gap-1.5 rounded-full px-3 py-1.5">
-      <View className="bg-teal size-2 rounded-full" />
-      <Text className="text-teal text-xs font-semibold">
+    <View className="bg-teal border-foreground flex-row items-center gap-1.5 rounded-md border-2 px-2.5 py-1">
+      <View className="bg-foreground size-2" />
+      <Text className="text-xs font-bold uppercase tracking-wider">
         Synced · {people} {people === 1 ? 'person' : 'people'}
       </Text>
     </View>
@@ -187,12 +196,13 @@ function PersonChip({
   label: string;
 }) {
   return (
-    <View
-      className="bg-card flex-row items-center gap-2 rounded-full border-2 py-1 pl-1 pr-3"
-      style={{ borderColor: `${color}55` }}
-    >
-      <PersonAvatar person={person} color={color} className="size-7" />
-      <Text className="text-sm font-medium" numberOfLines={1}>
+    <View className="bg-card border-foreground flex-row items-center gap-2 overflow-hidden rounded-md border-2 pr-3">
+      <PersonAvatar
+        person={person}
+        color={color}
+        className="size-8 rounded-none border-0 border-r-2"
+      />
+      <Text className="text-sm font-semibold" numberOfLines={1}>
         {label}
       </Text>
     </View>

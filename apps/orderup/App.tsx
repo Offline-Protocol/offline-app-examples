@@ -143,7 +143,7 @@ export default function App() {
         title="Order Up"
         tagline="Open the kitchen on the tablet by the pass. Waiters join it and send orders over Bluetooth, no Wi-Fi needed."
         illustration={<BellArt size={180} />}
-        accentColor="#FF385C"
+        accentColor="#FF5029"
         status={room.status}
         error={room.error}
         hosts={room.hosts}

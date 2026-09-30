@@ -7,32 +7,28 @@ import type { MyStatus } from '../domain/orders';
 // Full class names (not built from parts) so Tailwind can see them.
 export const STATUS_STYLE: Record<
   MyStatus,
-  { label: string; bg: string; text: string; dot: string }
+  { label: string; bg: string; text: string }
 > = {
   sending: {
     label: 'Sending…',
     bg: 'bg-muted',
     text: 'text-muted-foreground',
-    dot: 'bg-muted-foreground',
   },
-  new: { label: 'New', bg: 'bg-sky/15', text: 'text-[#1F64D6]', dot: 'bg-sky' },
+  new: { label: 'New', bg: 'bg-sky', text: 'text-foreground' },
   cooking: {
     label: 'Cooking',
-    bg: 'bg-sunny/20',
-    text: 'text-[#9A6200]',
-    dot: 'bg-sunny',
+    bg: 'bg-sunny',
+    text: 'text-foreground',
   },
   ready: {
     label: 'Ready',
-    bg: 'bg-teal/15',
-    text: 'text-[#00786F]',
-    dot: 'bg-teal',
+    bg: 'bg-teal',
+    text: 'text-foreground',
   },
   served: {
     label: 'Served',
     bg: 'bg-muted',
     text: 'text-muted-foreground',
-    dot: 'bg-muted-foreground',
   },
 };
 
@@ -41,12 +37,15 @@ export function StatusPill({ status }: { status: MyStatus }) {
   return (
     <View
       className={cn(
-        'flex-row items-center gap-1.5 rounded-full px-3 py-1',
+        'border-foreground flex-row items-center rounded-sm border-2 px-2 py-0.5',
         s.bg,
       )}
     >
-      <View className={cn('size-2 rounded-full', s.dot)} />
-      <Text className={cn('text-xs font-bold', s.text)}>{s.label}</Text>
+      <Text
+        className={cn('text-xs font-bold uppercase tracking-wider', s.text)}
+      >
+        {s.label}
+      </Text>
     </View>
   );
 }
@@ -65,15 +64,12 @@ export function TopBar({
   onLeave: () => void;
 }) {
   return (
-    <View className="border-border flex-row items-center gap-3 border-b px-5 pb-3 pt-2">
+    <View className="border-foreground bg-background flex-row items-center gap-3 border-b-2 px-5 pb-3 pt-2">
       <View className="flex-1">
-        <Text className="text-muted-foreground text-xs font-semibold uppercase tracking-widest">
+        <Text className="text-muted-foreground text-xs font-bold uppercase tracking-widest">
           {eyebrow}
         </Text>
-        <Text
-          className="text-2xl font-extrabold tracking-tight"
-          numberOfLines={1}
-        >
+        <Text className="font-serif text-3xl leading-[38px]" numberOfLines={1}>
           {title}
         </Text>
       </View>
@@ -85,10 +81,7 @@ export function TopBar({
           <PersonAvatar
             key={person.id}
             person={person}
-            className={cn(
-              'border-background size-10 border-2',
-              i > 0 && '-ml-3',
-            )}
+            className={cn('size-10', i > 0 && '-ml-2')}
           />
         ))}
       </View>

@@ -2,7 +2,9 @@ import {
   Badge,
   Button,
   cn,
+  hardShadow,
   Icon,
+  INK,
   PersonAvatar,
   Text,
 } from '@offline-app-examples/ui';
@@ -68,10 +70,10 @@ export function InventoryScreen(props: Props) {
 
   return (
     <SafeAreaView className="bg-background flex-1" edges={['top', 'bottom']}>
-      <View className="gap-3 px-5 pb-4 pt-2">
+      <View className="border-foreground gap-3 border-b-2 px-5 pb-4 pt-2">
         <View className="flex-row items-center justify-between gap-3">
           <Text
-            className="flex-1 text-3xl font-extrabold tracking-tight"
+            className="flex-1 font-serif text-4xl leading-[44px]"
             numberOfLines={1}
           >
             {storeName}
@@ -84,11 +86,14 @@ export function InventoryScreen(props: Props) {
           <View className="flex-1 flex-row items-center gap-2">
             <View
               className={cn(
-                'size-2.5 rounded-full',
+                'border-foreground size-3 border-2',
                 reconnecting || others === 0 ? 'bg-sunny' : 'bg-teal',
               )}
             />
-            <Text className="text-muted-foreground text-sm" numberOfLines={1}>
+            <Text
+              className="text-muted-foreground text-sm font-medium"
+              numberOfLines={1}
+            >
               {status}
             </Text>
           </View>
@@ -97,22 +102,22 @@ export function InventoryScreen(props: Props) {
               <PersonAvatar
                 key={person.id}
                 person={person}
-                className="border-background -ml-1.5 size-10 border-2"
+                className="-ml-1.5 size-10"
               />
             ))}
           </View>
         </View>
         {reconnecting ? (
-          <View className="bg-sunny/15 flex-row items-center gap-3 rounded-2xl px-4 py-3">
-            <ActivityIndicator color="#B37700" />
-            <Text className="flex-1 text-sm">
+          <View className="bg-sunny border-foreground flex-row items-center gap-3 rounded-md border-2 px-4 py-3">
+            <ActivityIndicator color={INK} />
+            <Text className="flex-1 text-sm font-medium">
               Reconnecting to store… Changes you make now are sent when it is
               back.
             </Text>
           </View>
         ) : null}
       </View>
-      <ScrollView contentContainerClassName="flex-row flex-wrap justify-between gap-y-3 px-5 pb-6">
+      <ScrollView contentContainerClassName="flex-row flex-wrap justify-between gap-y-4 px-5 pb-6 pt-4">
         {PRODUCTS.map((product) => (
           <ProductCard
             key={product.id}
@@ -146,15 +151,20 @@ function ProductCard({ product, qty, flash, onAdjust }: CardProps) {
   const glowStyle = useAnimatedStyle(() => ({ opacity: glow.value }));
 
   return (
-    <View className="bg-card border-border w-[48.3%] gap-3 rounded-3xl border p-4 shadow-sm shadow-black/5">
+    <View
+      className="bg-card border-foreground w-[48.3%] gap-3 rounded-lg border-2 p-4"
+      style={hardShadow}
+    >
       <Animated.View pointerEvents="none" style={[styles.glow, glowStyle]} />
       <View className="items-center">
         <ProductArt id={product.id} size={76} />
         <StockBadge qty={qty} />
       </View>
       <View>
-        <Text className="text-base font-semibold">{product.name}</Text>
-        <Text className="text-muted-foreground text-xs">{product.unit}</Text>
+        <Text className="text-base font-bold">{product.name}</Text>
+        <Text className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
+          {product.unit}
+        </Text>
       </View>
       <View className="flex-row items-center justify-between">
         <RoundButton
@@ -166,7 +176,7 @@ function ProductCard({ product, qty, flash, onAdjust }: CardProps) {
           iconClassName="text-foreground"
         />
         <Text
-          className="text-2xl font-extrabold"
+          className="text-3xl font-bold"
           style={{ fontVariant: ['tabular-nums'] }}
         >
           {qty}
@@ -176,7 +186,7 @@ function ProductCard({ product, qty, flash, onAdjust }: CardProps) {
           label={`Add one ${product.name}`}
           onPress={() => onAdjust(1)}
           className="bg-teal"
-          iconClassName="text-white"
+          iconClassName="text-foreground"
         />
       </View>
     </View>
@@ -189,11 +199,11 @@ function StockBadge({ qty }: { qty: number }) {
   return (
     <Badge
       className={cn(
-        'absolute right-0 top-0 border-transparent',
+        'absolute right-0 top-0',
         out ? 'bg-destructive' : 'bg-sunny',
       )}
     >
-      <Text className="text-xs font-bold text-white">
+      <Text className={out ? 'text-white' : 'text-foreground'}>
         {out ? 'Out' : 'Low'}
       </Text>
     </Badge>
@@ -216,7 +226,7 @@ function RoundButton(props: {
       onPress={props.onPress}
       hitSlop={6}
       className={cn(
-        'size-10 items-center justify-center rounded-full active:opacity-70',
+        'border-foreground size-10 items-center justify-center rounded-md border-2 active:opacity-70',
         props.className,
         props.disabled && 'opacity-40',
       )}
@@ -235,10 +245,10 @@ const styles = StyleSheet.create({
   // The teal ring a card flashes when another device changes it.
   glow: {
     position: 'absolute',
-    inset: -1,
-    borderRadius: 24,
-    borderWidth: 2,
-    borderColor: '#00A699',
-    backgroundColor: 'rgba(0,166,153,0.08)',
+    inset: -2,
+    borderRadius: 6,
+    borderWidth: 3,
+    borderColor: '#10C683',
+    backgroundColor: 'rgba(16,198,131,0.18)',
   },
 });
