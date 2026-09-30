@@ -171,7 +171,7 @@ function SyncPill({ online, people }: { online: boolean; people: number }) {
       <View className="bg-sunny border-foreground ml-2 shrink flex-row items-center gap-1.5 rounded-md border-2 px-2.5 py-1">
         <Icon as={CloudOff} size={14} className="text-foreground" />
         <Text className="shrink text-xs font-bold" numberOfLines={1}>
-          Offline - edits will sync when nearby
+          Offline: edits will sync when nearby
         </Text>
       </View>
     );

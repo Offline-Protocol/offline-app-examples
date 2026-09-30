@@ -34,7 +34,7 @@ Debug builds load JavaScript from Metro. To use the app away from your computer,
 2. The others tap **Join a document** and pick that phone from the nearby list. Once the shared group is set up they land in the same document.
 3. Type. Edits appear on the other phones within a moment. Each person has a color: their avatar in the bar under the title, and a tinted character where their cursor is in the text.
 4. Rename the document by tapping the title.
-5. Walk out of range and keep writing: the pill switches to **Offline - edits will sync when nearby**. Come back and both sides merge.
+5. Walk out of range and keep writing: the pill switches to **Offline: edits will sync when nearby**. Come back and both sides merge.
 6. **Leave** removes your cursor and returns to the start screen.
 
 ## Why a CRDT, not messages

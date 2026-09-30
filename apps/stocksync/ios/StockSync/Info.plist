@@ -38,8 +38,6 @@
 	<string>Sync stock counts with teammates nearby, without internet.</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>
 	<string>Sync stock counts with teammates nearby, without internet.</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string></string>
 	<key>RCTNewArchEnabled</key>
 	<true/>
 	<key>UIBackgroundModes</key>
