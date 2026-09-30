@@ -1,0 +1,47 @@
+name: Bug report
+description: Something in one of the example apps does not work as described.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. For a security issue, do not use this form: email security@offlineprotocol.com instead.
+  - type: dropdown
+    id: app
+    attributes:
+      label: Example
+      options:
+        - Tic Tac Together
+        - Stock Sync
+        - Order Up
+        - Cowrite
+        - packages/mesh or packages/ui
+        - Repository setup or CI
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: devices
+    attributes:
+      label: Devices
+      description: Phone models and OS versions of every device involved, and whether each ran a Debug or Release build.
+      placeholder: "iPhone 15, iOS 18.6, Debug; Pixel 8, Android 15, Release"
+    validations:
+      required: true
+  - type: input
+    id: commit
+    attributes:
+      label: Commit
+      description: The commit of this repository you built from (`git rev-parse --short HEAD`).
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevant Metro, Xcode or `adb logcat` output. Remove anything private first.
+      render: text

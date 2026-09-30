@@ -21,3 +21,22 @@ android/.gradle/
 xcuserdata/
 
 *.mp4
+
+# Signing material and service config. The standard React Native debug
+# keystore is the only keystore that belongs in this repository.
+*.jks
+*.keystore
+!**/android/app/debug.keystore
+*.p8
+*.p12
+*.mobileprovision
+google-services.json
+GoogleService-Info.plist
+
+# Ruby / CocoaPods
+vendor/bundle/
+.bundle/
+
+# Editors
+.idea/
+.vscode/

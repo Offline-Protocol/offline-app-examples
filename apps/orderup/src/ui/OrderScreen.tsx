@@ -277,7 +277,7 @@ function CartPanel({
         maxLength={NOTE_MAX}
       />
       <Button size="lg" disabled={hint !== null} onPress={onSend}>
-        <Text>{hint ?? `Send to kitchen · $${total}`}</Text>
+        <Text>{hint ?? `Send to kitchen ($${total})`}</Text>
       </Button>
     </View>
   );

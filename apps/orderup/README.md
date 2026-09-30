@@ -99,5 +99,11 @@ pnpm --filter @offline-app-examples/orderup lint
 The test covers idempotent placing, status changes, stale snapshots, resending of
 missing orders and the snapshot size bound. It does not replace a test on real devices.
 
-SDK license: AGPL-3.0-only, with a commercial dual license available from Offline
-Protocol. See the installed SDK's license files.
+## Licensing
+
+This example's code is licensed under MIT-0 (see the repository's
+[LICENSE](../../LICENSE)). It depends on `@offline-protocol/mesh-sdk`, which is
+licensed under AGPL-3.0-only or a commercial license from Offline Protocol, Inc.
+An app that embeds the SDK, including one built from this example, is subject to
+the AGPL-3.0-only unless you hold a commercial license. See
+[Licensing](https://www.offlineprotocol.com/docs/operations/licensing).

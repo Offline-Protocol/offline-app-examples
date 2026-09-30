@@ -2,6 +2,7 @@
   "name": "@offline-app-examples/cowrite",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT-0",
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
