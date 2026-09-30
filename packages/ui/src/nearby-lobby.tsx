@@ -256,7 +256,8 @@ function Header({ title, action, onAction }: { title: string; action: string; on
   );
 }
 
-export function PersonAvatar({ person, className }: { person: LobbyPerson; className?: string }) {
+/** `color` overrides the id-hashed background, e.g. to match a color assigned elsewhere. */
+export function PersonAvatar({ person, className, color }: { person: LobbyPerson; className?: string; color?: string }) {
   const initials = person.name
     .split(/\s+/)
     .filter(Boolean)
@@ -267,7 +268,9 @@ export function PersonAvatar({ person, className }: { person: LobbyPerson; class
   for (const char of person.id) hash = (hash * 31 + char.charCodeAt(0)) | 0;
   return (
     <Avatar alt={person.name} className={cn('size-12', className)}>
-      <AvatarFallback className={AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]}>
+      <AvatarFallback
+        className={color ? undefined : AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]}
+        style={color ? { backgroundColor: color } : undefined}>
         <Text className="text-base font-bold text-white">{initials || '?'}</Text>
       </AvatarFallback>
     </Avatar>

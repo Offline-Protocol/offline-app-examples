@@ -1,6 +1,6 @@
 import { Button, Icon, PersonAvatar, Text } from '@offline-app-examples/ui';
 import { ChevronLeft, CloudOff } from 'lucide-react-native';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -14,15 +14,12 @@ import { markCursors, wordCount } from '../domain/text';
 import { useSharedDoc } from '../useSharedDoc';
 import { EmptyDocIllustration } from './illustrations';
 
-// Same palette and hash as PersonAvatar, so a cursor is the color of its owner's avatar.
+// Everyone gets their own color: sort the ids of the people in the doc and hand out colors
+// in that order. Every phone sorts the same ids, so everyone agrees on who is which color.
+// Unique for up to 5 people, more than a BLE room holds.
 const COLORS = ['#FF385C', '#00A699', '#FFAA00', '#428BFF', '#8A5CD6'];
-const ON_COLOR = '#FFFFFF';
-function personColor(id: string) {
-  let hash = 0;
-  // eslint-disable-next-line no-bitwise
-  for (const char of id) hash = (hash * 31 + char.charCodeAt(0)) | 0;
-  return COLORS[Math.abs(hash) % COLORS.length]!;
-}
+// Shared by the input and its cursor mirror, so both wrap the text identically.
+const TEXT_CLASS = 'p-0 text-[17px] leading-[26px]';
 
 type Props = {
   space: string;
@@ -37,6 +34,7 @@ type Props = {
 export function EditorScreen({ space, me, changes, online, onLeave }: Props) {
   const doc = useSharedDoc(space, me, changes);
   const input = useRef<TextInput>(null);
+  const [scrollY, setScrollY] = useState(0);
 
   // A remote edit before our caret moved it: put the native caret back on the same spot.
   const { caretFix } = doc;
@@ -45,11 +43,13 @@ export function EditorScreen({ space, me, changes, online, onLeave }: Props) {
       input.current.setSelection(caretFix.start, caretFix.end);
   }, [caretFix]);
 
-  // Remote cursors are drawn inside the text itself: the character next to each cursor
-  // gets a tinted background. TextInput renders nested <Text> children as styled runs on
-  // both iOS and Android, and the characters stay exactly the document's (nothing is
-  // inserted), so typing, selection and offsets are untouched. An overlay would need the
-  // position of every glyph, which TextInput does not report.
+  // Remote cursors are drawn on a mirror of the text behind the input: the same text in the
+  // same font and width, invisible except for a tinted box on the character next to each
+  // cursor. The input itself only ever holds plain text. (Styled <Text> children inside the
+  // TextInput also work on iOS, but Android re-sets the whole styled text on every keystroke,
+  // so the document flickers and the tinted run jumps lines.)
+  const ids = [me.id, ...doc.others.map((o) => o.id)].sort();
+  const personColor = (id: string) => COLORS[ids.indexOf(id) % COLORS.length]!;
   const others = doc.others.map((o) => ({ ...o, color: personColor(o.id) }));
   const segments = markCursors(doc.text, others);
   const people = others.length + 1;
@@ -116,30 +116,37 @@ export function EditorScreen({ space, me, changes, online, onLeave }: Props) {
               </Text>
             </View>
           ) : null}
-          <TextInput
-            ref={input}
-            multiline
-            onChangeText={doc.onChangeText}
-            onSelectionChange={(e) =>
-              doc.onSelectionChange(e.nativeEvent.selection)
-            }
-            textAlignVertical="top"
-            autoCapitalize="sentences"
-            className="text-foreground flex-1 text-[17px] leading-[26px]"
-          >
-            {segments.map((s, i) =>
-              s.color ? (
+          <View className="flex-1 overflow-hidden">
+            <RNText
+              pointerEvents="none"
+              className={`absolute inset-x-0 top-0 text-transparent ${TEXT_CLASS}`}
+              style={{ transform: [{ translateY: -scrollY }] }}
+            >
+              {segments.map((s, i) => (
                 <RNText
                   key={i}
-                  style={{ backgroundColor: s.color, color: ON_COLOR }}
+                  style={
+                    s.color ? { backgroundColor: `${s.color}66` } : undefined
+                  }
                 >
                   {s.text}
                 </RNText>
-              ) : (
-                <RNText key={i}>{s.text}</RNText>
-              ),
-            )}
-          </TextInput>
+              ))}
+            </RNText>
+            <TextInput
+              ref={input}
+              multiline
+              value={doc.text}
+              onChangeText={doc.onChangeText}
+              onSelectionChange={(e) =>
+                doc.onSelectionChange(e.nativeEvent.selection)
+              }
+              onScroll={(e) => setScrollY(e.nativeEvent.contentOffset.y)}
+              textAlignVertical="top"
+              autoCapitalize="sentences"
+              className={`text-foreground flex-1 ${TEXT_CLASS}`}
+            />
+          </View>
           <Text className="text-muted-foreground pt-2 text-right text-xs">
             {wordCount(doc.text)} {wordCount(doc.text) === 1 ? 'word' : 'words'}
           </Text>
@@ -184,7 +191,7 @@ function PersonChip({
       className="bg-card flex-row items-center gap-2 rounded-full border-2 py-1 pl-1 pr-3"
       style={{ borderColor: `${color}55` }}
     >
-      <PersonAvatar person={person} className="size-7" />
+      <PersonAvatar person={person} color={color} className="size-7" />
       <Text className="text-sm font-medium" numberOfLines={1}>
         {label}
       </Text>

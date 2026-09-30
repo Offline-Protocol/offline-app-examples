@@ -12,8 +12,10 @@ const META = 'meta';
 const PRESENCE = 'presence';
 const CURSORS = 'cursors';
 
-const FLUSH_MS = 150; // edits reach the other phones on flush, so keep it short
-const CURSOR_MS = 250; // at most 4 cursor writes a second
+// Every flush is one encrypted group frame over BLE. An Android phone sends to an iPhone at
+// only ~2 KB/s (185-byte indications), so batch keystrokes instead of flushing each one.
+const FLUSH_MS = 500; // at most 2 text frames a second while typing
+const CURSOR_MS = 1000; // at most 1 cursor write a second
 const HEARTBEAT_MS = 10_000; // rewrite our cursor now and then so others know we are still here
 const STALE_MS = 30_000; // hide a cursor that has not changed for this long
 
@@ -39,6 +41,7 @@ export function useSharedDoc(
   const textRef = useRef(''); // what the input shows right now
   const selection = useRef<Selection>({ start: 0, end: 0 });
   const typed = useRef(0); // bumps on every local keystroke
+  const applied = useRef(0); // the last keystroke whose write reached the store
   const seen = useRef(new Map<string, { raw: string; at: number }>()); // presence values and when they last changed
 
   // Every DataStore call goes through one queue, so reads never interleave with writes.
@@ -50,14 +53,15 @@ export function useSharedDoc(
   }, []);
 
   // Edits stay on this phone until flushed; a flush makes them durable and pushes them to the group.
+  // Throttled, not debounced: while typing, one flush every FLUSH_MS carries everything since the last.
   const flushTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const flushSoon = useCallback(
     (doc: string) => {
-      clearTimeout(flushTimers.current[doc]);
-      flushTimers.current[doc] = setTimeout(
-        () => run(() => store.flush(space, doc)),
-        FLUSH_MS,
-      );
+      if (flushTimers.current[doc]) return; // a flush is already coming
+      flushTimers.current[doc] = setTimeout(() => {
+        delete flushTimers.current[doc];
+        run(() => store.flush(space, doc));
+      }, FLUSH_MS);
     },
     [run, space, store],
   );
@@ -67,14 +71,13 @@ export function useSharedDoc(
   /** Re-read the text after a remote change and keep our caret on the same spot. */
   const readText = useCallback(() => {
     run(async () => {
-      const before = typed.current;
       const [remote, savedTitle] = await Promise.all([
         store.textValue(space, DOC, BODY),
         store.mapGet(space, DOC, META, 'title'),
       ]);
-      // Typed while we were reading? That keystroke is queued behind us and its flush
-      // brings another data_changed, so skip this read instead of undoing it on screen.
-      if (typed.current !== before) return;
+      // A keystroke still queued behind us isn't in `remote` yet: showing `remote` would
+      // briefly undo it and strand the caret. Its flush brings another data_changed, so skip.
+      if (applied.current !== typed.current) return;
       if (savedTitle?.kind === 'text') setTitle(savedTitle.value);
       if (remote === textRef.current) return;
       const edit = diffText(textRef.current, remote)!;
@@ -99,22 +102,26 @@ export function useSharedDoc(
     textRef.current = next;
     setText(next);
     if (!edit) return;
-    typed.current++;
+    const seq = ++typed.current;
     setOthers((list) =>
       list.map((o) => ({ ...o, pos: shiftCaret(o.pos, edit) })),
     );
     run(async () => {
-      // A remote change may have merged in since `prev` was on screen. Move our edit
-      // through it so it still lands between the same characters.
-      const stored = await store.textValue(space, DOC, BODY);
-      const { index, removed } =
-        stored === prev ? edit : rebase(edit, diffText(prev, stored)!);
-      // The SDK counts characters, JavaScript counts UTF-16 units (emoji are 2).
-      const at = charCount(stored.slice(0, index));
-      const count = charCount(stored.slice(index, index + removed));
-      if (count) await store.textDelete(space, DOC, BODY, at, count);
-      if (edit.inserted)
-        await store.textInsert(space, DOC, BODY, at, edit.inserted);
+      try {
+        // A remote change may have merged in since `prev` was on screen. Move our edit
+        // through it so it still lands between the same characters.
+        const stored = await store.textValue(space, DOC, BODY);
+        const { index, removed } =
+          stored === prev ? edit : rebase(edit, diffText(prev, stored)!);
+        // The SDK counts characters, JavaScript counts UTF-16 units (emoji are 2).
+        const at = charCount(stored.slice(0, index));
+        const count = charCount(stored.slice(index, index + removed));
+        if (count) await store.textDelete(space, DOC, BODY, at, count);
+        if (edit.inserted)
+          await store.textInsert(space, DOC, BODY, at, edit.inserted);
+      } finally {
+        applied.current = seq;
+      }
       flushSoon(DOC);
     });
   };
@@ -122,12 +129,16 @@ export function useSharedDoc(
   /** The title is one map key: whoever renamed the document last wins. */
   const onTitleChange = (next: string) => {
     setTitle(next);
-    typed.current++;
+    const seq = ++typed.current;
     run(async () => {
-      await store.mapSet(space, DOC, META, 'title', {
-        kind: 'text',
-        value: next,
-      });
+      try {
+        await store.mapSet(space, DOC, META, 'title', {
+          kind: 'text',
+          value: next,
+        });
+      } finally {
+        applied.current = seq;
+      }
       flushSoon(DOC);
     });
   };
