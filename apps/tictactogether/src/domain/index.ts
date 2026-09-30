@@ -85,6 +85,43 @@ export function transition(
     return { ...s, rematch: null, declined: true };
   return null;
 }
+// The host (X) owns the match. The member playing O sends actions tagged with
+// the revision it saw; the host applies one only if that revision is current,
+// so duplicates and stale taps are ignored, and answers with the full state.
+
+/** Everything both phones need to draw the game. `o` is the room peer id playing O. */
+export type Match = { rev: number; game: DomainState; o: string | null };
+export type StateMessage = { type: 'state' } & Match;
+export type ActionMessage = { type: 'action'; rev: number; action: Action };
+export type GameMessage = StateMessage | ActionMessage;
+
+export const initialMatch = (): Match => ({
+  rev: 0,
+  game: initialDomainState(),
+  o: null,
+});
+
+/** Applies `a` for `actor`, bumping the revision. Null if the action is illegal. */
+export function play(m: Match, actor: Mark, a: Action): Match | null {
+  const game = transition(m.game, actor, a);
+  return game && { ...m, rev: m.rev + 1, game };
+}
+
+/** Validates anything received from another device. */
+export function parseMessage(data: unknown): GameMessage | null {
+  const m = data as any;
+  if (!m || !Number.isSafeInteger(m.rev) || m.rev < 0) return null;
+  if (
+    m.type === 'state' &&
+    validState(m.game) &&
+    (m.o === null || (typeof m.o === 'string' && m.o.length <= 200))
+  )
+    return { type: 'state', rev: m.rev, game: m.game, o: m.o };
+  if (m.type === 'action' && validAction(m.action))
+    return { type: 'action', rev: m.rev, action: m.action };
+  return null;
+}
+
 export function validAction(a: any): a is Action {
   return (
     !!a &&

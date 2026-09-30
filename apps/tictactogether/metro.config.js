@@ -1,5 +1,6 @@
 const path = require('path');
 const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
+const { withNativeWind } = require('nativewind/metro');
 
 const monorepoRoot = path.resolve(__dirname, '../..');
 
@@ -14,4 +15,7 @@ const config = {
   },
 };
 
-module.exports = mergeConfig(getDefaultConfig(__dirname), config);
+// The theme lives in the shared ui package; App.tsx imports the same file.
+module.exports = withNativeWind(mergeConfig(getDefaultConfig(__dirname), config), {
+  input: require.resolve('@offline-app-examples/ui/global.css'),
+});
