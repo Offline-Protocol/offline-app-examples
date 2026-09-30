@@ -43,6 +43,14 @@ pnpm --filter @offline-app-examples/tictactogether android
 | Order Up | [`apps/orderup`](./apps/orderup) | Restaurant POS: order devices send tickets to a kitchen display, status flows back |
 | Cowrite | [`apps/cowrite`](./apps/cowrite) | Offline shared doc editor with live cursors, built on the SDK's CRDT documents |
 
+### Order Up
+
+![Order Up demo: iOS kitchen display and Android waiter device](./apps/orderup/demo.gif)
+
+### Stock Sync
+
+![Stock Sync demo: iOS and Android syncing stock counts](./apps/stocksync/demo.gif)
+
 Shared code lives in [`packages/ui`](./packages/ui) (React Native Reusables components + nearby lobby) and [`packages/mesh`](./packages/mesh) (a small nearby-room wrapper over the SDK).
 
 See each app’s README for platform setup (CocoaPods, signing, etc.).
