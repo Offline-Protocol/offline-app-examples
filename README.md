@@ -39,6 +39,11 @@ pnpm --filter @offline-app-examples/tictactogether android
 | App | Path | Description |
 | --- | --- | --- |
 | Tic Tac Together | [`apps/tictactogether`](./apps/tictactogether) | Two-player tic-tac-toe over nearby Bluetooth |
+| Stock Sync | [`apps/stocksync`](./apps/stocksync) | Shared supermarket inventory; quantities sync across nearby devices |
+| Order Up | [`apps/orderup`](./apps/orderup) | Restaurant POS: order devices send tickets to a kitchen display, status flows back |
+| Cowrite | [`apps/cowrite`](./apps/cowrite) | Offline shared doc editor with live cursors, built on the SDK's CRDT documents |
+
+Shared code lives in [`packages/ui`](./packages/ui) (React Native Reusables components + nearby lobby) and [`packages/mesh`](./packages/mesh) (a small nearby-room wrapper over the SDK).
 
 See each app’s README for platform setup (CocoaPods, signing, etc.).
 

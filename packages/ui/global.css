@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Theme tokens (HSL channels, RN Reusables convention). Light theme only.
+ * Use them through the tailwind classes in tailwind-preset.js, e.g.
+ * `bg-primary`, `text-muted-foreground`, `bg-teal/10`.
+ */
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 13%; /* #222222 */
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 13%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 13%;
+    --primary: 350 100% 61%; /* coral #FF385C */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 97%; /* #F7F7F7 */
+    --secondary-foreground: 0 0% 13%;
+    --muted: 0 0% 97%;
+    --muted-foreground: 0 0% 42%; /* #6A6A6A */
+    --accent: 350 100% 97%; /* coral tint, used for selected/pressed */
+    --accent-foreground: 350 75% 42%;
+    --destructive: 11 80% 42%; /* #C13515 */
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 92%; /* #EBEBEB */
+    --input: 0 0% 87%; /* #DDDDDD */
+    --ring: 350 100% 61%;
+    --radius: 0.875rem;
+
+    /* Friendly accents for categories, avatars and illustrations. */
+    --teal: 175 100% 33%; /* #00A699 */
+    --sunny: 40 100% 50%; /* #FFAA00 */
+    --sky: 217 100% 63%; /* #428BFF */
+    --grape: 265 60% 58%; /* #8A5CD6 */
+  }
+}
