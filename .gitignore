@@ -17,3 +17,5 @@ android/.gradle/
 **/.cxx/
 **/android/local.properties
 *.jsbundle
+**/ios/.xcode.env.local
+xcuserdata/
