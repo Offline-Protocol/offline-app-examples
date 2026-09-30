@@ -1,6 +1,6 @@
 import { ChevronRight, Radio, Users } from 'lucide-react-native';
 import * as React from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { KeyboardAvoidingView, Pressable, ScrollView, View } from 'react-native';
 import Animated, {
   cancelAnimation,
   Easing,
@@ -115,7 +115,10 @@ export function NearbyLobby(props: NearbyLobbyProps) {
 
   return (
     <SafeAreaView className="bg-background flex-1" edges={['top', 'bottom']}>
-      {body}
+      {/* Android is edge-to-edge (forced on API 35+), so adjustResize alone doesn't lift the buttons. */}
+      <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
+        {body}
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
