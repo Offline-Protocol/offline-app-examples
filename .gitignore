@@ -19,3 +19,5 @@ android/.gradle/
 *.jsbundle
 **/ios/.xcode.env.local
 xcuserdata/
+
+*.mp4
