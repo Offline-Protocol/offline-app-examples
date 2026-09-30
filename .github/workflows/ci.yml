@@ -91,9 +91,23 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # CocoaPods on the runner's default Ruby intermittently fails with
+      # "pathname contains null byte" (CocoaPods/CocoaPods#12798), so use the
+      # app's Gemfile on Ruby 3.2 and retry.
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+          working-directory: apps/${{ matrix.app }}
       - name: Install pods
         working-directory: apps/${{ matrix.app }}/ios
-        run: pod install
+        run: |
+          for attempt in 1 2 3; do
+            bundle exec pod install && exit 0
+            echo "pod install failed (attempt $attempt), retrying"
+            rm -rf Pods
+          done
+          exit 1
       - name: Build for the iOS simulator
         working-directory: apps/${{ matrix.app }}/ios
         run: |
