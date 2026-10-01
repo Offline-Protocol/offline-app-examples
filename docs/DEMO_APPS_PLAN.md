@@ -13,7 +13,7 @@ Planning only — no app scaffolds until implementation starts.
 | App | CLI / template lane |
 | --- | --- |
 | YardGate | Nearby service discovery + invoke |
-| VenueStaff | Encrypted group messaging |
+| Event Floor | Events app: **Flow A** staff dispatch + **Flow B** gate sync (one app, two GIFs) |
 | OutageNet | Local handoff + retained delivery + sync |
 | AgriMesh | Multi-hop relay / store-and-forward (custom on mesh primitives) |
 
@@ -28,7 +28,7 @@ Planning only — no app scaffolds until implementation starts.
 | OutageNet | **2** | Direct handoff + sync story |
 | AgriMesh | **3+** | Field spread > BLE range; readings hop via middle device |
 | YardGate | **3** | Driver → relay in yard → **gate officer** approves/denies |
-| VenueStaff | **3** | Staff sender → **attendee/stranger relay** (cannot read) → staff receiver |
+| Event Floor | **2–3** | Flow A: staff + relay (3). Flow B: gate scanners (+ optional relay) |
 
 ---
 
@@ -36,8 +36,8 @@ Planning only — no app scaffolds until implementation starts.
 
 1. **OutageNet** — handoff, accept, outbox, idempotent mock HQ (template for sync honesty)
 2. **YardGate** — MeshServices + gate role + relay phone
-3. **VenueStaff** — MLS group + OfflineID staff enrollment + relay
-4. **AgriMesh** — multi-hop batch carry (depends on comfort with group/relay from VenueStaff)
+3. **Event Floor** — single events demo app: Flow A (staff) + Flow B (gate); see `docs/EVENT_FLOOR_DEMO_PLAN.md`; **demo GIF per flow**
+4. **AgriMesh** — multi-hop batch carry (depends on comfort with group/relay from Event Floor Flow A)
 
 ---
 
@@ -63,34 +63,24 @@ Planning only — no app scaffolds until implementation starts.
 
 ---
 
-## 2. VenueStaff (organiser + ticketing platform)
+## 2. Event Floor (single events demo app)
 
-**Site vertical:** [Live events](https://www.offlineprotocol.com/solutions/events) — staff ops **and** platform gate sync (e.g. [TicketingHub](https://www.ticketinghub.com/en-US) commercial interest: scanners sharing check-ins offline).
+**Site vertical:** [Live events](https://www.offlineprotocol.com/solutions/events) — **organisers** and **ticketing platforms** (generic; no vendor name in the app).
 
-**Two demo paths (same SDK, different UI story):**
+**One app (`apps/eventfloor`), two flows** — full scope in [`docs/EVENT_FLOOR_DEMO_PLAN.md`](./EVENT_FLOOR_DEMO_PLAN.md).
 
-| Path | Buyer | Proves |
+| Flow | Buyer | Proves |
 | --- | --- | --- |
-| **A — Staff ops** | Event organiser | MLS staff group + OfflineID; medic/security dispatch over crowd relay |
-| **B — Gate sync** | Ticketing platform / POS | Shared **admission ledger** across 2–3 gate scanners over Bluetooth mesh; idempotent ingest to mock TH API |
+| **A — Staff ops** | Event organiser | MLS staff group + OfflineID; dispatch over crowd relay (relay cannot read) |
+| **B — Gate sync** | Ticketing / gate POS | Shared **admission ledger** across scanners; idempotent mock platform ingest |
 
-Path B is the Carl/TicketingHub workflow; see `docs/TICKETINGHUB_SCOPE.md`. Path A stays the public “VenueStaff” narrative on the website.
+**Catalogue bar (Satvik / Mizan parity):** End-to-end RN app, seeded reset, README scripts, **`demo-staff.gif`** + **`demo-gate.gif`**, root README embeds, CI matrix row.
 
-**Purpose (Path A):** Cell saturated; **staff-only** coordination over **Bluetooth mesh**, including when traffic **relays through a non-staff phone**.
+**Flow A (short):** Security sends “Medic, Section B”; staff receiver gets it on **Bluetooth mesh** when cell is saturated; optional third phone relays.
 
-**Roles:**
+**Flow B (short):** Scanner A admits ticket; B shows **already used** offline; sync shows **dupes dropped** on repeat ingest.
 
-| Role | Device | Behavior |
-| --- | --- | --- |
-| Staff sender | Phone A | OfflineID **staff** session; sends e.g. “Medic needed, Section B” in **MLS encrypted group** |
-| Relay | Phone B | Forwards mesh traffic; **must not decrypt** staff payload |
-| Staff receiver | Phone C | OfflineID staff; receives and acks alert |
-
-**User experience:** “I'm security. I send an alert. Another staff phone gets it even when the tower is useless. If the packet hops through a random attendee phone, that phone **still can't read** the message — that's the point vs public mesh chat.”
-
-**Proves:** Encrypted group messaging + **OfflineID sign-in** for staff roster; relay + confidentiality.
-
-**Implementation note:** Use encrypted group (`group: true` / MLS group), not a open room. Document seeded staff accounts for the demo reset.
+**Implementation:** Shared lobby with flow/role selection; Flow A uses `group: true` + staff OfflineID; Flow B uses host-authoritative admission + outbox (Order Up / OutageNet patterns). Bluetooth-only wording.
 
 ---
 
@@ -154,7 +144,8 @@ Path B is the Carl/TicketingHub workflow; see `docs/TICKETINGHUB_SCOPE.md`. Path
 - **Presenter / debug strip:** pending, delivered, accepted (where relevant), synced, **duplicates dropped** count.
 - Mock HQ / farm / gate log: simple HTTP or in-app “dashboard” view for demos.
 - Release build note for offline-from-Metro demos.
-- Later: video, TestFlight/APK (Ditto-style catalogue).
+- **Event Floor:** two **`demo.gif`** assets (one per flow) before calling the events demo catalogue-complete.
+- Later: TestFlight/APK (Ditto-style catalogue).
 
 ---
 
@@ -169,6 +160,6 @@ Four apps map to logistics, events, public sector, and agriculture. Three map 1:
 - [Local handoff](https://www.offlineprotocol.com/docs/guides/local-handoff)
 - [Backend delivery](https://www.offlineprotocol.com/docs/guides/backend-delivery)
 - [Nearby service](https://www.offlineprotocol.com/docs/guides/nearby-service)
-- [Shared state / groups](https://www.offlineprotocol.com/docs/guides/shared-state) (VenueStaff)
+- [Shared state / groups](https://www.offlineprotocol.com/docs/guides/shared-state) (Event Floor Flow A)
 - [Platforms & transports](https://www.offlineprotocol.com/docs/getting-started/platforms) (BLE limits)
 - Repo patterns: `packages/mesh`, `apps/orderup`, `apps/cowrite`
