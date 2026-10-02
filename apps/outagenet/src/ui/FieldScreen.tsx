@@ -2,6 +2,7 @@ import { Button, Text } from '@offline-app-examples/ui';
 import { Check, Send } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { FlatList, Pressable, TextInput, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   SECTORS,
   type FieldRecord,
@@ -46,72 +47,83 @@ export function FieldScreen({
   );
 
   return (
-    <View className="bg-background flex-1">
+    <SafeAreaView className="bg-background flex-1" edges={['top', 'bottom']}>
       <TopBar
         eyebrow={reconnecting ? 'Reconnecting…' : 'Field unit'}
         title={postName}
         people={people}
         onLeave={onLeave}
       />
-      <View className="gap-2 px-5 py-3">
-        <Text className="text-muted-foreground text-xs font-bold uppercase">
-          Sector
-        </Text>
-        <View className="flex-row flex-wrap gap-2">
-          {SECTORS.map((s) => (
-            <Pressable
-              key={s}
-              onPress={() => setSector(s)}
-              className={`rounded-sm border-2 px-3 py-1 ${
-                sector === s
-                  ? 'border-foreground bg-sky'
-                  : 'border-muted bg-muted/30'
-              }`}
-            >
-              <Text className="text-sm font-semibold">{s}</Text>
-            </Pressable>
-          ))}
-        </View>
-        <TextInput
-          className="border-foreground rounded-sm border-2 px-3 py-2 text-base"
-          value={text}
-          onChangeText={setText}
-          placeholder="Status update"
-        />
-        <Button onPress={() => onStatus(sector, text.trim())}>
-          <Send size={18} color="#fff" />
-          <Text>Post status</Text>
-        </Button>
-        <TextInput
-          className="border-foreground rounded-sm border-2 px-3 py-2 text-base"
-          value={handoffNote}
-          onChangeText={setHandoffNote}
-          placeholder="Handoff note"
-        />
-        <Button variant="outline" onPress={() => onHandoff(sector, handoffNote.trim())}>
-          <Text>Hand off responsibility</Text>
-        </Button>
-      </View>
-      {pendingForMe.length > 0 && (
-        <View className="border-foreground mx-5 mb-2 rounded-md border-2 bg-amber-100 p-3">
-          <Text className="font-bold">Accept handoff?</Text>
-          {pendingForMe.map((h) => (
-            <View key={h.operationId} className="mt-2 flex-row items-center justify-between gap-2">
-              <Text className="flex-1 text-sm">
-                {h.kind === 'handoff' ? h.note : ''}
-              </Text>
-              <Button size="sm" onPress={() => onAccept(h.operationId)}>
-                <Check size={16} color="#fff" />
-                <Text>Accept</Text>
-              </Button>
-            </View>
-          ))}
-        </View>
-      )}
       <FlatList
+        className="flex-1"
         data={[...field.records].reverse()}
         keyExtractor={(item) => item.operationId}
-        contentContainerClassName="px-5 pb-24 gap-3"
+        contentContainerClassName="px-5 pb-4 gap-3 grow"
+        ListHeaderComponent={
+          <View className="gap-2 pb-2">
+            <View className="gap-2 px-5 py-3">
+              <Text className="text-muted-foreground text-xs font-bold uppercase">
+                Sector
+              </Text>
+              <View className="flex-row flex-wrap gap-2">
+                {SECTORS.map((s) => (
+                  <Pressable
+                    key={s}
+                    onPress={() => setSector(s)}
+                    className={`rounded-sm border-2 px-3 py-1 ${
+                      sector === s
+                        ? 'border-foreground bg-sky'
+                        : 'border-muted bg-muted/30'
+                    }`}
+                  >
+                    <Text className="text-sm font-semibold">{s}</Text>
+                  </Pressable>
+                ))}
+              </View>
+              <TextInput
+                className="border-foreground rounded-sm border-2 px-3 py-2 text-base"
+                value={text}
+                onChangeText={setText}
+                placeholder="Status update"
+              />
+              <Button onPress={() => onStatus(sector, text.trim())}>
+                <Send size={18} color="#fff" />
+                <Text>Post status</Text>
+              </Button>
+              <TextInput
+                className="border-foreground rounded-sm border-2 px-3 py-2 text-base"
+                value={handoffNote}
+                onChangeText={setHandoffNote}
+                placeholder="Handoff note"
+              />
+              <Button
+                variant="outline"
+                onPress={() => onHandoff(sector, handoffNote.trim())}
+              >
+                <Text>Hand off responsibility</Text>
+              </Button>
+            </View>
+            {pendingForMe.length > 0 && (
+              <View className="border-foreground mx-5 rounded-md border-2 bg-amber-100 p-3">
+                <Text className="font-bold">Accept handoff?</Text>
+                {pendingForMe.map((h) => (
+                  <View
+                    key={h.operationId}
+                    className="mt-2 flex-row items-center justify-between gap-2"
+                  >
+                    <Text className="flex-1 text-sm">
+                      {h.kind === 'handoff' ? h.note : ''}
+                    </Text>
+                    <Button size="sm" onPress={() => onAccept(h.operationId)}>
+                      <Check size={16} color="#fff" />
+                      <Text>Accept</Text>
+                    </Button>
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
+        }
         renderItem={({ item }) => (
           <FieldRecordCard record={item} now={now} meId={me.id} />
         )}
@@ -122,7 +134,7 @@ export function FieldScreen({
         duplicatesDropped={field.hqDuplicatesDropped}
         hqTotal={field.syncedIds.length}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 

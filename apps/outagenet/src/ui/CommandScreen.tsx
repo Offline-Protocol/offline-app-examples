@@ -2,6 +2,7 @@ import { Button, Icon, Text } from '@offline-app-examples/ui';
 import { Check, CloudUpload } from 'lucide-react-native';
 import React from 'react';
 import { FlatList, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import type { CommandState, FieldRecord } from '../domain/ops';
 import { DebugStrip, timeAgo, TopBar, useNow } from './common';
 
@@ -29,27 +30,21 @@ export function CommandScreen({
     (r) => r.kind === 'handoff' && r.state === 'pending',
   );
 
-  return (
-    <View className="bg-background flex-1">
-      <TopBar
-        eyebrow="Command post"
-        title={postName}
-        people={people}
-        onLeave={onLeave}
-      />
-      <View className="flex-row gap-2 px-5 py-3">
+  const listHeader = (
+    <View className="gap-2 pb-2">
+      <View className="flex-row gap-2 px-5 pt-3">
         <Button className="flex-1" onPress={onSyncHq}>
           <Icon as={CloudUpload} size={18} className="text-primary-foreground" />
           <Text>Sync to HQ (mock)</Text>
         </Button>
       </View>
-      <View className="px-5 pb-2">
+      <View className="px-5">
         <Text className="text-muted-foreground text-sm">
           Bluetooth mesh · no cloud required for field updates
         </Text>
       </View>
       {pendingHandoffs.length > 0 && (
-        <View className="border-foreground mx-5 mb-2 rounded-md border-2 bg-amber-100 p-3">
+        <View className="border-foreground mx-5 rounded-md border-2 bg-amber-100 p-3">
           <Text className="font-bold">Pending handoffs</Text>
           {pendingHandoffs.map((h) => (
             <View
@@ -67,10 +62,23 @@ export function CommandScreen({
           ))}
         </View>
       )}
+    </View>
+  );
+
+  return (
+    <SafeAreaView className="bg-background flex-1" edges={['top', 'bottom']}>
+      <TopBar
+        eyebrow="Command post"
+        title={postName}
+        people={people}
+        onLeave={onLeave}
+      />
       <FlatList
+        className="flex-1"
         data={[...command.records].reverse()}
         keyExtractor={(item) => item.operationId}
-        contentContainerClassName="px-5 pb-24 gap-3"
+        contentContainerClassName="px-5 pb-4 gap-3 grow"
+        ListHeaderComponent={listHeader}
         ListEmptyComponent={
           <Text className="text-muted-foreground py-8 text-center">
             Waiting for field updates…
@@ -86,7 +94,7 @@ export function CommandScreen({
         duplicatesDropped={command.hqDuplicatesDropped}
         hqTotal={hqTotal}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 

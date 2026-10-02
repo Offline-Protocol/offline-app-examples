@@ -1,17 +1,5 @@
 # Event Floor demo plan
 
-**Product:** One end-to-end example app in [offline-app-examples](https://github.com/Offline-Protocol/offline-app-examples) for **live events and ticketing customers**, MIT-0 like Stock Sync and Order Up.
-
-**App name (repo):** `eventfloor` · **Display name:** **Event Floor**
-
-**Why this name:** In venues, the **event floor** is where show-day reality happens—**gates and admissions**, **security and medical dispatch**, **crowd-saturated networks**—not the back-office dashboard. One app covers both **floor staff coordination** and **gate scanners staying in sync** when connectivity fails.
-
-**Positioning:** Generic **event organiser + ticketing platform** story. Do **not** brand the demo or public docs after a specific vendor. Partner evaluations use this app as the reference implementation; integration scope below is for **any** platform with bookings APIs and gate scanners.
-
-**Site alignment:** [Events solution](https://www.offlineprotocol.com/solutions/events) — staff ops, gate scanning, ticket verification, fraud/duplicates, sync back to system of record.
-
-**SDK:** Mesh SDK **0.27.0**, **Bluetooth mesh** only in copy and narration (phone Wi‑Fi Direct carries no data in 0.27).
-
 ---
 
 ## One app, two flows (sections)
