@@ -1,6 +1,13 @@
 import { ChevronRight, Radio, Users } from 'lucide-react-native';
 import * as React from 'react';
-import { KeyboardAvoidingView, Pressable, ScrollView, View } from 'react-native';
+import {
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  View,
+} from 'react-native';
 import Animated, {
   cancelAnimation,
   Easing,
@@ -115,32 +122,83 @@ export function NearbyLobby(props: NearbyLobbyProps) {
 
   return (
     <SafeAreaView className="bg-background flex-1" edges={['top', 'bottom']}>
-      {/* Android is edge-to-edge (forced on API 35+), so adjustResize alone doesn't lift the buttons. */}
-      <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 4 : 0}>
         {body}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
+function useKeyboardOpen() {
+  const [open, setOpen] = React.useState(false);
+  React.useEffect(() => {
+    const show = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hide = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const showSub = Keyboard.addListener(show, () => setOpen(true));
+    const hideSub = Keyboard.addListener(hide, () => setOpen(false));
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+  return open;
+}
+
 type InnerProps = NearbyLobbyProps & { labels: NearbyLobbyLabels; accent: string };
 
 function Start({ title, tagline, illustration, name, onNameChange, onHost, onDiscover, status, error, labels, accent }: InnerProps) {
   const busy = status === 'starting';
+  const keyboardOpen = useKeyboardOpen();
+  const scrollRef = React.useRef<ScrollView>(null);
+
+  React.useEffect(() => {
+    if (keyboardOpen) {
+      scrollRef.current?.scrollToEnd({ animated: true });
+    }
+  }, [keyboardOpen]);
+
   return (
-    <View className="flex-1 px-6">
-      <View className="flex-1 justify-center gap-4">
+    <ScrollView
+      ref={scrollRef}
+      className="flex-1 px-6"
+      contentContainerClassName="grow pb-4"
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="on-drag"
+      showsVerticalScrollIndicator={false}>
+      <View
+        className={cn(
+          'gap-4',
+          keyboardOpen ? 'pt-2' : 'min-h-[240px] flex-grow justify-center py-6',
+        )}>
         {illustration ? (
           <View
-            style={[{ backgroundColor: accent }, hardShadow]}
-            className="border-foreground items-center overflow-hidden rounded-lg border-2 py-6">
+            style={[
+              { backgroundColor: accent },
+              hardShadow,
+              keyboardOpen ? { transform: [{ scale: 0.72 }] } : undefined,
+            ]}
+            className={cn(
+              'border-foreground items-center overflow-hidden rounded-lg border-2',
+              keyboardOpen ? 'py-1' : 'py-6',
+            )}>
             {illustration}
           </View>
         ) : null}
-        <Text className="font-serif text-5xl leading-[56px]">{title}</Text>
-        {tagline ? <Text className="text-muted-foreground text-lg font-medium leading-6">{tagline}</Text> : null}
+        <Text
+          className={cn(
+            'font-serif',
+            keyboardOpen ? 'text-4xl leading-[44px]' : 'text-5xl leading-[56px]',
+          )}>
+          {title}
+        </Text>
+        {tagline && !keyboardOpen ? (
+          <Text className="text-muted-foreground text-lg font-medium leading-6">{tagline}</Text>
+        ) : null}
       </View>
-      <View className="gap-3 pb-4">
+      <View className="gap-3">
         <Input
           value={name}
           onChangeText={onNameChange}
@@ -161,7 +219,7 @@ function Start({ title, tagline, illustration, name, onNameChange, onHost, onDis
           <Text>{labels.join}</Text>
         </Button>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
