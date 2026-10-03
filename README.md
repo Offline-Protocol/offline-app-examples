@@ -17,6 +17,7 @@ accounts or server, and shows a different way to keep shared state in sync.
 | Stock Sync | [`apps/stocksync`](./apps/stocksync) | Shared inventory. Optimistic local changes confirmed by host snapshots; members keep working while out of range. |
 | Order Up | [`apps/orderup`](./apps/orderup) | Restaurant orders from waiters' phones to a kitchen display. Idempotent requests, resends and status updates. |
 | Cowrite | [`apps/cowrite`](./apps/cowrite) | Shared plain-text document with live cursors, built on the SDK's replicated documents (`DataStore`) in an MLS group. |
+| OutageNet | [`apps/outagenet`](./apps/outagenet) | Public-sector style outage coordination: status + handoff accept over Bluetooth, mock HQ sync with idempotent ingest. |
 
 Each app's README explains how to run it, how its sync works and what its tests cover.
 
@@ -75,7 +76,7 @@ pnpm --filter @offline-app-examples/stocksync ios -- --device
 pnpm --filter @offline-app-examples/stocksync android
 ```
 
-Replace `stocksync` with `tictactogether`, `orderup` or `cowrite` for the other apps.
+Replace `stocksync` with `tictactogether`, `orderup`, `cowrite` or `outagenet` for the other apps.
 For iOS you can also open the app's `ios/*.xcworkspace` in Xcode, choose your team
 under Signing & Capabilities, and run on each phone. Debug builds load JavaScript
 from Metro; install a Release build to use an app away from your computer.
