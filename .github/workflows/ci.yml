@@ -49,7 +49,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [tictactogether, stocksync, orderup, cowrite, outagenet]
+        app: [tictactogether, stocksync, orderup, cowrite, outagenet, yardgate]
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -85,6 +85,8 @@ jobs:
             scheme: Cowrite
           - app: outagenet
             scheme: OutageNet
+          - app: yardgate
+            scheme: YardGate
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
