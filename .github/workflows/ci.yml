@@ -105,11 +105,19 @@ jobs:
           working-directory: apps/${{ matrix.app }}
       - name: Install pods
         working-directory: apps/${{ matrix.app }}/ios
+        env:
+          LANG: en_US.UTF-8
+          LC_ALL: en_US.UTF-8
+          CP_HOME_DIR: ${{ runner.temp }}/cocoapods
         run: |
-          for attempt in 1 2 3; do
-            bundle exec pod install && exit 0
+          mkdir -p "$CP_HOME_DIR"
+          for attempt in 1 2 3 4 5; do
+            if bundle exec pod install; then
+              exit 0
+            fi
             echo "pod install failed (attempt $attempt), retrying"
             rm -rf Pods
+            sleep $((attempt * 8))
           done
           exit 1
       - name: Build for the iOS simulator
