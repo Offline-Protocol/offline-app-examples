@@ -2,10 +2,12 @@ import { describe, expect, it } from '@jest/globals';
 import {
   encodeCheckIn,
   encodeDecision,
+  encodeServiceError,
   emptyGate,
   gateReducer,
   parseCheckIn,
   parseDecision,
+  parseServiceError,
 } from '../src/domain/checkin';
 
 describe('check-in payloads', () => {
@@ -73,6 +75,25 @@ describe('gateReducer', () => {
     expect(state.pending).toHaveLength(0);
   });
 
+  it('dedupes duplicate checkInId still pending', () => {
+    let state = gateReducer(emptyGate(), {
+      type: 'request_received',
+      requestId: 'req-1',
+      sender: 'off1driver',
+      payload: base,
+      at: 2,
+    });
+    state = gateReducer(state, {
+      type: 'request_received',
+      requestId: 'req-2',
+      sender: 'off1driver',
+      payload: base,
+      at: 3,
+    });
+    expect(state.pending).toHaveLength(1);
+    expect(state.duplicateResponses).toBe(1);
+  });
+
   it('parses gate decisions', () => {
     const d = {
       checkInId: 'chk-1',
@@ -81,5 +102,11 @@ describe('gateReducer', () => {
       at: 5,
     };
     expect(parseDecision(encodeDecision(d))).toEqual(d);
+  });
+});
+
+describe('service errors', () => {
+  it('round-trips service error JSON', () => {
+    expect(parseServiceError(encodeServiceError('invalid_check_in'))).toBe('invalid_check_in');
   });
 });

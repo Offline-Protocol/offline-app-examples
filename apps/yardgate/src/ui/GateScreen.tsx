@@ -8,6 +8,7 @@ import { DebugStrip, TopBar, useNow } from './common';
 export function GateScreen({
   gateName,
   gate,
+  gateActionError,
   neighbors,
   me,
   onApprove,
@@ -16,6 +17,7 @@ export function GateScreen({
 }: {
   gateName: string;
   gate: GateState;
+  gateActionError: string;
   neighbors: number;
   me: { id: string; name: string };
   onApprove: (item: PendingCheckIn) => void;
@@ -37,6 +39,9 @@ export function GateScreen({
               Check-in requests arrive over Bluetooth mesh. Approve or deny — the driver sees your
               decision on their phone.
             </Text>
+            {gateActionError ? (
+              <Text className="text-destructive text-sm">{gateActionError}</Text>
+            ) : null}
             {gate.pending.length === 0 ? (
               <View className="border-foreground bg-muted/30 rounded-xl border-2 border-dashed px-4 py-8">
                 <Text className="text-center font-serif text-xl">Waiting for drivers</Text>

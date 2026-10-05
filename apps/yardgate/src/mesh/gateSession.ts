@@ -1,11 +1,14 @@
 import {
+  bluetoothMeshProtocolConfig,
   cleanName,
+  pause,
+  poll,
   requestNearbyPermissions,
   SERVICE_VERSION,
+  waitForBluetooth,
   type NearbyHost,
 } from '@offline-app-examples/mesh';
-import OfflineProtocol, { MeshServices, type ProtocolConfig, type ProtocolEvent } from '@offline-protocol/mesh-sdk';
-import { Platform } from 'react-native';
+import OfflineProtocol, { MeshServices, type ProtocolEvent } from '@offline-protocol/mesh-sdk';
 import { CHECKIN_METHOD, SERVICE_SUFFIX } from '../domain/checkin';
 
 export type YardRole = 'gate' | 'driver' | 'relay';
@@ -43,55 +46,9 @@ export type YardCallbacks = {
 const TICK_MS = 2000;
 const PROVIDER_TTL_MS = 25_000;
 const DISCOVER_MIN_INTERVAL_MS = 6000;
+const RELAY_HOPS = 3;
 
-const pause = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 const errorMessage = (error: unknown) => (error instanceof Error ? error.message : String(error));
-
-function protocolConfig(appId: string): ProtocolConfig {
-  const hops = 3;
-  return {
-    appId,
-    profile: 'default',
-    transports: {
-      ble: { enabled: true },
-      wifiDirect: { enabled: false },
-      internet: { enabled: false },
-      nostr: { enabled: false },
-      reticulum: { enabled: false },
-    },
-    network: { initialTtl: hops },
-    meshRelay: { maxTtl: hops, denseMaxTtl: hops },
-    relay: { allowRelay: true, relayPriority: 'always' },
-    group: { relayEnabled: false, relayBroadcastEnabled: false },
-    encryption: { enabled: true, autoKeyExchange: true, storePending: true },
-    reliability: {
-      ack: { defaultTimeoutMs: 12_000 },
-      retry: {
-        maxRetries: 8,
-        initialDelayMs: 400,
-        maxDelayMs: 6000,
-        outboxMaxLifetimeMs: 180_000,
-        pendingMessageMaxLifetimeMs: 180_000,
-      },
-    },
-  };
-}
-
-async function poll<T>(read: () => Promise<T | null | undefined>, timeoutMs: number): Promise<T | null> {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
-    const value = await read().catch(() => null);
-    if (value) return value;
-    await pause(500);
-  }
-  return null;
-}
-
-async function waitForBluetooth(p: OfflineProtocol): Promise<boolean> {
-  if (await p.isBluetoothEnabled()) return true;
-  if (Platform.OS === 'android' && (await p.requestEnableBluetooth().catch(() => false))) return true;
-  return (await poll(async () => ((await p.isBluetoothEnabled()) ? true : null), 10_000)) === true;
-}
 
 function providerFromEvent(
   event: {
@@ -183,7 +140,7 @@ export class GateSession {
     try {
       await requestNearbyPermissions();
       if (generation !== this.generation) return;
-      const p = new OfflineProtocol(protocolConfig(this.appId));
+      const p = new OfflineProtocol(bluetoothMeshProtocolConfig(this.appId, RELAY_HOPS));
       p.on('all', this.onEvent);
       this.protocol = p;
       await p.start();
@@ -196,7 +153,9 @@ export class GateSession {
       }
       if (generation !== this.generation) return;
       this.update({ localId });
-      if (role === 'gate') await this.services.registerService(this.serviceId, SERVICE_VERSION, { name: this.displayName });
+      if (role === 'gate') {
+        await this.services.registerService(this.serviceId, SERVICE_VERSION, { name: this.displayName });
+      }
       this.timer = setInterval(this.tick, TICK_MS);
       this.update({ status: 'active' });
       if (role === 'driver') void this.runDiscovery();
@@ -250,7 +209,9 @@ export class GateSession {
     const { role, status } = this.snapshot;
     if (status !== 'active') return;
     if (role === 'gate') {
-      void this.services.registerService(this.serviceId, SERVICE_VERSION, { name: this.displayName }).catch(() => {});
+      void this.services
+        .registerService(this.serviceId, SERVICE_VERSION, { name: this.displayName })
+        .catch(() => {});
     } else if (role === 'driver') {
       const providers = pruneProviders(this.snapshot.providers, Date.now());
       if (providers !== this.snapshot.providers) this.update({ providers });

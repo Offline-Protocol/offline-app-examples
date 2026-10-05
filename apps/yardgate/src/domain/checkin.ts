@@ -1,6 +1,24 @@
 export const CHECKIN_METHOD = 'checkin';
 export const SERVICE_SUFFIX = '-gate';
 
+/** Mesh SDK `respondToServiceRequest` / response events — not HTTP status codes. */
+export const SERVICE_STATUS_OK = 'ok';
+export const SERVICE_STATUS_ERROR = 'error';
+export const SERVICE_STATUS_NOT_FOUND = 'not_found';
+
+export function encodeServiceError(message: string): string {
+  return JSON.stringify({ message: message.slice(0, 120) });
+}
+
+export function parseServiceError(body: string): string | null {
+  try {
+    const raw = JSON.parse(body) as { message?: string };
+    return typeof raw.message === 'string' ? raw.message.slice(0, 200) : null;
+  } catch {
+    return body.slice(0, 200) || null;
+  }
+}
+
 export type CheckInPayload = {
   checkInId: string;
   loadId: string;
@@ -130,6 +148,9 @@ export function gateReducer(state: GateState, action: GateAction): GateState {
       return { ...state, duplicateResponses: state.duplicateResponses + 1 };
     case 'request_received': {
       if (findDecision(state, action.payload.checkInId)) {
+        return { ...state, duplicateResponses: state.duplicateResponses + 1 };
+      }
+      if (state.pending.some((p) => p.checkInId === action.payload.checkInId)) {
         return { ...state, duplicateResponses: state.duplicateResponses + 1 };
       }
       if (state.pending.some((p) => p.requestId === action.requestId)) return state;

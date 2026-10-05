@@ -2,7 +2,7 @@
 
 Logistics yard check-in when there is no cellular: a **driver** discovers a **gate check-in service** over **Bluetooth mesh**, submits a seeded load / trailer ID, and the **gate officer** approves or denies on their phone. An optional **yard relay** phone carries traffic when the driver is not in direct range of the gate.
 
-Mesh SDK **0.27** — `MeshServices` discover + invoke only (no Proof of Location; invoke bodies are signed plaintext — no secrets).
+Mesh SDK **0.27** — `MeshServices` discover + invoke only (no Proof of Location; invoke bodies are signed plaintext — no secrets). Service responses use SDK status strings **`ok`**, **`error`**, or **`not_found`** (not HTTP codes like `200`).
 
 ## What it demonstrates
 

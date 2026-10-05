@@ -15,6 +15,7 @@ import {
   type NearbyHost,
 } from './hosts';
 import { requestNearbyPermissions } from './permissions';
+import { bluetoothMeshProtocolConfig, pause, poll, waitForBluetooth } from './runtime';
 
 export type RoomStatus =
   | 'idle' // nothing running
@@ -67,7 +68,6 @@ const JOIN_TIMEOUT_MS = 90_000;
 const PEER_LOST_GRACE_MS = 20_000; // BLE links flap; only drop a peer that stays gone
 const MAX_MESSAGE_BYTES = 16 * 1024; // one message, in bytes of JSON
 
-const pause = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
 const errorMessage = (error: unknown) => (error instanceof Error ? error.message : String(error));
 
 /**
@@ -564,55 +564,9 @@ const IDLE: Omit<RoomSnapshot, 'localId'> = {
   groupId: null,
 };
 
-/** Bluetooth only: internet, Nostr, Reticulum and relay servers are off. */
 function protocolConfig({ appId, group = false }: RoomOptions): ProtocolConfig {
-  // Star rooms only talk to direct neighbors. Group mode lets the host forward
-  // group traffic between members that are not in Bluetooth range of each other.
-  const hops = group ? 3 : 1;
-  return {
-    appId,
-    profile: 'default',
-    transports: {
-      ble: { enabled: true },
-      // The phone Wi-Fi Direct transport carries no traffic in SDK 0.27, so it stays off.
-      wifiDirect: { enabled: false },
-      internet: { enabled: false },
-      nostr: { enabled: false },
-      reticulum: { enabled: false },
-    },
-    network: { initialTtl: hops },
-    meshRelay: { maxTtl: hops, denseMaxTtl: hops },
-    relay: group ? { allowRelay: true, relayPriority: 'always' } : { allowRelay: false, relayPriority: 'never' },
-    group: { relayEnabled: false, relayBroadcastEnabled: false },
-    encryption: { enabled: true, autoKeyExchange: true, storePending: true },
-    reliability: {
-      ack: { defaultTimeoutMs: 10_000 },
-      retry: {
-        maxRetries: 8,
-        initialDelayMs: 300,
-        maxDelayMs: 5000,
-        outboxMaxLifetimeMs: 180_000,
-        pendingMessageMaxLifetimeMs: 180_000,
-      },
-    },
-  };
-}
-
-async function poll<T>(read: () => Promise<T | null | undefined>, timeoutMs: number): Promise<T | null> {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
-    const value = await read().catch(() => null);
-    if (value) return value;
-    await pause(500);
-  }
-  return null;
-}
-
-/** iOS reports Bluetooth as off for a moment after start, so wait a little. */
-async function waitForBluetooth(p: OfflineProtocol): Promise<boolean> {
-  if (await p.isBluetoothEnabled()) return true;
-  if (Platform.OS === 'android' && (await p.requestEnableBluetooth().catch(() => false))) return true;
-  return (await poll(async () => ((await p.isBluetoothEnabled()) ? true : null), 10_000)) === true;
+  // Star rooms: 1 hop. Group mode: 3 hops so the host can relay MLS group traffic.
+  return bluetoothMeshProtocolConfig(appId, group ? 3 : 1);
 }
 
 function log(appId: string, ...args: unknown[]) {

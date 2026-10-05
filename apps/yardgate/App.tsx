@@ -4,8 +4,10 @@ import React, { useCallback, useRef, useState } from 'react';
 import { Pressable, StatusBar, TextInput, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import {
+  CHECKIN_METHOD,
   encodeCheckIn,
   encodeDecision,
+  encodeServiceError,
   emptyDriver,
   emptyGate,
   findDecision,
@@ -13,7 +15,10 @@ import {
   newCheckInId,
   parseCheckIn,
   parseDecision,
+  parseServiceError,
   SEEDED_LOADS,
+  SERVICE_STATUS_ERROR,
+  SERVICE_STATUS_OK,
   type DriverState,
   type GateState,
   type PendingCheckIn,
@@ -32,6 +37,7 @@ export default function App() {
   const [pickedRole, setPickedRole] = useState<YardRole | null>(null);
   const [gate, setGate] = useState<GateState>(emptyGate);
   const [driver, setDriver] = useState<DriverState>(emptyDriver);
+  const [gateActionError, setGateActionError] = useState('');
   const [selectedLoadIndex, setSelectedLoadIndex] = useState(0);
   const [selectedProviderId, setSelectedProviderId] = useState<string | null>(null);
   const pendingRequestIds = useRef<Map<string, string>>(new Map());
@@ -51,18 +57,16 @@ export default function App() {
     providers: { id: string }[];
   } | null>(null);
 
+  const respondGate = useCallback(
+    (requestId: string, requester: string, status: string, body: string) =>
+      sessionRef.current?.respondToCheckIn(requestId, requester, status, body),
+    [],
+  );
+
   const respondWithDecision = useCallback(
     async (item: PendingCheckIn, decision: 'approved' | 'denied', gateOfficer: string) => {
+      setGateActionError('');
       const at = Date.now();
-      const next = gateReducer(gateRef.current, {
-        type: 'decide',
-        checkInId: item.checkInId,
-        decision,
-        gateOfficer,
-        at,
-      });
-      gateRef.current = next;
-      setGate(next);
       const body = encodeDecision({
         checkInId: item.checkInId,
         decision,
@@ -70,28 +74,57 @@ export default function App() {
         at,
         note: decision === 'denied' ? 'See gate officer' : undefined,
       });
-      // Mesh SDK service responses use ok | not_found | error (not HTTP codes).
-      await sessionRef.current?.respondToCheckIn(item.requestId, item.sender, 'ok', body);
+      try {
+        await sessionRef.current?.respondToCheckIn(
+          item.requestId,
+          item.sender,
+          SERVICE_STATUS_OK,
+          body,
+        );
+        const next = gateReducer(gateRef.current, {
+          type: 'decide',
+          checkInId: item.checkInId,
+          decision,
+          gateOfficer,
+          at,
+        });
+        gateRef.current = next;
+        setGate(next);
+      } catch (e) {
+        setGateActionError(e instanceof Error ? e.message : String(e));
+      }
     },
     [],
   );
 
   const yard = useGateSession(APP_ID, {
     onCheckInRequest: ({ requestId, sender, method, body }) => {
-      if (method !== 'checkin') return;
+      setGateActionError('');
+      if (method !== CHECKIN_METHOD) {
+        void respondGate(
+          requestId,
+          sender,
+          SERVICE_STATUS_ERROR,
+          encodeServiceError('unsupported_method'),
+        );
+        return;
+      }
       const payload = parseCheckIn(body);
-      if (!payload) return;
+      if (!payload) {
+        void respondGate(
+          requestId,
+          sender,
+          SERVICE_STATUS_ERROR,
+          encodeServiceError('invalid_check_in'),
+        );
+        return;
+      }
       const existing = findDecision(gateRef.current, payload.checkInId);
       if (existing) {
         const next = gateReducer(gateRef.current, { type: 'duplicate_response' });
         gateRef.current = next;
         setGate(next);
-        void sessionRef.current?.respondToCheckIn(
-          requestId,
-          sender,
-          'ok',
-          encodeDecision(existing),
-        );
+        void respondGate(requestId, sender, SERVICE_STATUS_OK, encodeDecision(existing));
         return;
       }
       const next = gateReducer(gateRef.current, {
@@ -104,15 +137,33 @@ export default function App() {
       gateRef.current = next;
       setGate(next);
     },
-    onCheckInResponse: ({ requestId, body }) => {
+    onCheckInResponse: ({ requestId, status, body }) => {
       const checkInId = pendingRequestIds.current.get(requestId);
+      pendingRequestIds.current.delete(requestId);
+
+      if (status !== SERVICE_STATUS_OK) {
+        const message =
+          parseServiceError(body) ?? `Gate responded with status "${status}". Try again.`;
+        setDriver({
+          status: 'error',
+          lastCheckInId: checkInId ?? null,
+          lastDecision: null,
+          error: message,
+        });
+        return;
+      }
+
       const decision = parseDecision(body);
       if (!decision) {
-        setDriver((d) => ({ ...d, status: 'error', error: 'Invalid gate response' }));
+        setDriver({
+          status: 'error',
+          lastCheckInId: checkInId ?? null,
+          lastDecision: null,
+          error: 'Invalid gate response',
+        });
         return;
       }
       if (checkInId && decision.checkInId !== checkInId) return;
-      pendingRequestIds.current.delete(requestId);
       setDriver({
         status: 'done',
         lastCheckInId: decision.checkInId,
@@ -130,6 +181,7 @@ export default function App() {
     setPickedRole(role);
     setGate(emptyGate());
     setDriver(emptyDriver());
+    setGateActionError('');
     pendingRequestIds.current.clear();
     await yard.start(role, name.trim() || role);
   }
@@ -140,6 +192,7 @@ export default function App() {
     setSelectedProviderId(null);
     setGate(emptyGate());
     setDriver(emptyDriver());
+    setGateActionError('');
     pendingRequestIds.current.clear();
   }
 
@@ -179,6 +232,7 @@ export default function App() {
       <GateScreen
         gateName={yard.displayName || 'Gate'}
         gate={gate}
+        gateActionError={gateActionError}
         neighbors={yard.neighborCount}
         me={me}
         onApprove={(item) => void respondWithDecision(item, 'approved', yard.displayName || 'Gate')}
