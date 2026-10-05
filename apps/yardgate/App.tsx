@@ -70,8 +70,8 @@ export default function App() {
         at,
         note: decision === 'denied' ? 'See gate officer' : undefined,
       });
-      const status = decision === 'approved' ? '200' : '403';
-      await sessionRef.current?.respondToCheckIn(item.requestId, item.sender, status, body);
+      // Mesh SDK service responses use ok | not_found | error (not HTTP codes).
+      await sessionRef.current?.respondToCheckIn(item.requestId, item.sender, 'ok', body);
     },
     [],
   );
@@ -89,7 +89,7 @@ export default function App() {
         void sessionRef.current?.respondToCheckIn(
           requestId,
           sender,
-          existing.decision === 'approved' ? '200' : '403',
+          'ok',
           encodeDecision(existing),
         );
         return;
