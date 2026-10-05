@@ -26,9 +26,13 @@ From the monorepo root:
 
 ```sh
 pnpm install
-cd apps/yardgate/ios && bundle exec pod install && cd ../../..
+cd apps/yardgate
+bundle install          # once — pins CocoaPods (same as other apps in this repo)
+cd ios && bundle exec pod install && cd ../..
 pnpm --filter @offline-app-examples/yardgate dev
 ```
+
+`ios/Pods/` is gitignored; **`pod install` is required** before the first iOS build (otherwise Xcode errors about missing `Pods-YardGate.debug.xcconfig`).
 
 Second terminal:
 

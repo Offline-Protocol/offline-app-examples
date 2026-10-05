@@ -13,10 +13,10 @@
 		4DADA4D9FCF7ACF7CD308512 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
 		59FA85C7DABD4C424CC92A6D /* dm_serif_display_regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0DDFFF2E5319DC6CB07FB356 /* dm_serif_display_regular.ttf */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
-		B2E8F1A12CA45701006654EE /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E8F1A02CA45701006654EE /* SceneDelegate.swift */; };
 		77425900FDE6A239FBDE1587 /* space_grotesk_semibold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 16DDDA6F0AE168DD28C46529 /* space_grotesk_semibold.ttf */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		ACF648FCD514FC7967494DCF /* space_grotesk_regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 8077B93F1BA98961C21AE16E /* space_grotesk_regular.ttf */; };
+		B2E8F1A12CA45701006654EE /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E8F1A02CA45701006654EE /* SceneDelegate.swift */; };
 		C79EC88C8F01E8069AAC7EB9 /* space_grotesk_bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A7E51F5E996CDBEB4D2962DC /* space_grotesk_bold.ttf */; };
 /* End PBXBuildFile section */
 
@@ -31,11 +31,11 @@
 		5709B34CF0A7D63546082F79 /* Pods-YardGate.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-YardGate.release.xcconfig"; path = "Target Support Files/Pods-YardGate/Pods-YardGate.release.xcconfig"; sourceTree = "<group>"; };
 		5DCACB8F33CDC322A6C60F78 /* libPods-YardGate.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-YardGate.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = YardGate/AppDelegate.swift; sourceTree = "<group>"; };
-		B2E8F1A02CA45701006654EE /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SceneDelegate.swift; path = YardGate/SceneDelegate.swift; sourceTree = "<group>"; };
 		7D7566AB5B03E0DD2AE8D975 /* space_grotesk_medium.ttf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; name = space_grotesk_medium.ttf; path = ../../../packages/ui/fonts/font/space_grotesk_medium.ttf; sourceTree = SOURCE_ROOT; };
 		8077B93F1BA98961C21AE16E /* space_grotesk_regular.ttf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; name = space_grotesk_regular.ttf; path = ../../../packages/ui/fonts/font/space_grotesk_regular.ttf; sourceTree = SOURCE_ROOT; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = YardGate/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		A7E51F5E996CDBEB4D2962DC /* space_grotesk_bold.ttf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; name = space_grotesk_bold.ttf; path = ../../../packages/ui/fonts/font/space_grotesk_bold.ttf; sourceTree = SOURCE_ROOT; };
+		B2E8F1A02CA45701006654EE /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SceneDelegate.swift; path = YardGate/SceneDelegate.swift; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -222,13 +222,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-YardGate/Pods-YardGate-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-YardGate/Pods-YardGate-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -265,13 +261,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-YardGate/Pods-YardGate-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-YardGate/Pods-YardGate-resources-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
