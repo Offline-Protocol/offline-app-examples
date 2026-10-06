@@ -36,7 +36,7 @@ Planning only — no app scaffolds until implementation starts.
 
 1. **OutageNet** — handoff, accept, outbox, idempotent mock HQ (template for sync honesty)
 2. **YardGate** — MeshServices + gate role + relay phone *(shipped: `apps/yardgate`)*
-3. **Event Floor** — single events demo app: Flow A (staff) + Flow B (gate); see `docs/EVENT_FLOOR_DEMO_PLAN.md`; **demo GIF per flow**
+3. **Event Floor** — single events demo app: Flow A (staff) + Flow B (gate); see `docs/EVENT_FLOOR_DEMO_PLAN.md`; **demo GIF per flow** *(shipped: `apps/eventfloor` — add GIF assets for catalogue)*
 4. **AgriMesh** — multi-hop batch carry (depends on comfort with group/relay from Event Floor Flow A)
 
 ---
