@@ -2,7 +2,7 @@
 
 Field coordination when towers are down. One phone runs the **command post**; others join as **field units** over **Bluetooth mesh** (no internet, no accounts). Post status updates, **hand off responsibility** with explicit accept, and **sync to a mock HQ** with visible duplicate suppression.
 
-Built on `@offline-app-examples/mesh` and `@offline-app-examples/ui`, Mesh SDK 0.27.
+Built on `@offline-app-examples/mesh` and `@offline-app-examples/ui`, Mesh SDK 0.28.
 
 ## What it demonstrates
 

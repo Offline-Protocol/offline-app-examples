@@ -71,7 +71,7 @@ await store.textInsert(room.groupId!, 'doc', 'body', 0, 'Hello');
 - One message is at most 16 KiB of JSON; `send` throws
   above it. Bluetooth moves roughly 180–500 bytes per fragment, so keep messages small.
 - iOS keeps at most about 4 Bluetooth connections per device, so plan for small rooms.
-- Wi-Fi Direct is off: in SDK 0.27 the phone Wi-Fi Direct transport carries no traffic.
+- Wi-Fi Direct is off (`wifiDirect: { enabled: false }` in `src/runtime.ts`), so everything goes over Bluetooth LE.
 - Discovery needs physical phones. Simulators run the UI but never find peers.
 
 ## Files

@@ -49,7 +49,7 @@ function HomeLobby({ onStart }: { onStart: (setup: Setup) => void }) {
         <Text className="font-serif text-4xl">AgriMesh</Text>
         <Text className="text-muted-foreground mt-2 text-base leading-6">
           {DEMO_FARM.name} — field readings hop across Bluetooth mesh to the farm office edge,
-          then sync once to a mock farm system (SDK 0.27).
+          then sync once to a mock farm system (SDK 0.28).
         </Text>
         <View className="my-6 items-center">
           <AgriHero size={160} />

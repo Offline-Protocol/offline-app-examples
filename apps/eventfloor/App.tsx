@@ -90,7 +90,7 @@ function HomeLobby({
         <Text className="font-serif text-4xl">Event Floor</Text>
         <Text className="text-muted-foreground mt-2 text-base leading-6">
           {DEMO_EVENT.name} — offline-capable staff dispatch and gate admission over Bluetooth mesh
-          (SDK 0.27).
+          (SDK 0.28).
         </Text>
         <View className="my-6 items-center">
           <EventHero size={160} />
