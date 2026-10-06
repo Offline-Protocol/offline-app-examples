@@ -3,7 +3,7 @@ PODS:
   - hermes-engine (250829098.0.10):
     - hermes-engine/Pre-built (= 250829098.0.10)
   - hermes-engine/Pre-built (250829098.0.10)
-  - MeshSdk (0.27.0):
+  - MeshSdk (0.28.0):
     - React-Core
   - RCTDeprecation (0.85.2)
   - RCTRequired (0.85.2)
@@ -2303,7 +2303,7 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   FBLazyVector: 26fd21c75314e101f280d401e97f27d54f3f7064
   hermes-engine: 3a002838bb4972a0235545718ba18f497305aa5d
-  MeshSdk: dc48b6c67eb632530836c964c9f2c5b1513224dd
+  MeshSdk: d4a40ad67dd577e5b41da02576c04f9519545545
   RCTDeprecation: c7a2768f905d76ca6d2cfefb26e4349eacbdfca3
   RCTRequired: 5e502c3553cfbed090a991c444448da452fb752e
   RCTSwiftUI: 5ce3ccbdc58b78cc4ebbaace01709ec22d58e131

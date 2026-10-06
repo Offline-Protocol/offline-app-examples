@@ -7,7 +7,7 @@ status change live.
 
 It shows how to build a **host-authoritative** app on
 [`@offline-protocol/mesh-sdk`](https://www.npmjs.com/package/@offline-protocol/mesh-sdk)
-0.27 with plain JSON messages and a small pure reducer, with no CRDTs and no server. The
+0.28 with plain JSON messages and a small pure reducer, with no CRDTs and no server. The
 Bluetooth side (discovery, joining, encryption) lives in `packages/mesh`
 (`useNearbyRoom`). UI components come from `packages/ui`.
 

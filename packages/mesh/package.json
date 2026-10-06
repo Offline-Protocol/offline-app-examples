@@ -11,13 +11,13 @@
     "test": "jest"
   },
   "peerDependencies": {
-    "@offline-protocol/mesh-sdk": "^0.27.0",
+    "@offline-protocol/mesh-sdk": "^0.28.0",
     "react": "*",
     "react-native": "*"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
-    "@offline-protocol/mesh-sdk": "^0.27.0",
+    "@offline-protocol/mesh-sdk": "^0.28.0",
     "@react-native/babel-preset": "0.85.2",
     "@react-native/typescript-config": "0.85.2",
     "@jest/globals": "^29.6.3",

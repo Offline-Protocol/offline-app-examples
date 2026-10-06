@@ -1,7 +1,7 @@
 # Tic Tac Together ✳
 
 A small, colorful rivalry between two nearby phones. React Native app for iOS and Android, built on `@offline-app-examples/mesh` (a thin room layer over
-`@offline-protocol/mesh-sdk` 0.27, see `packages/mesh/README.md`) and `@offline-app-examples/ui`.
+`@offline-protocol/mesh-sdk` 0.28, see `packages/mesh/README.md`) and `@offline-app-examples/ui`.
 
 ## Run
 

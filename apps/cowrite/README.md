@@ -1,6 +1,6 @@
 # Cowrite
 
-A shared document for the people in the room. Several nearby phones edit one plain-text document together, everyone sees everyone's cursor, and it all runs over Bluetooth with no internet, accounts or server. React Native app for iOS and Android, built on `@offline-protocol/mesh-sdk` 0.27 through the shared `@offline-app-examples/mesh` and `@offline-app-examples/ui` packages.
+A shared document for the people in the room. Several nearby phones edit one plain-text document together, everyone sees everyone's cursor, and it all runs over Bluetooth with no internet, accounts or server. React Native app for iOS and Android, built on `@offline-protocol/mesh-sdk` 0.28 through the shared `@offline-app-examples/mesh` and `@offline-app-examples/ui` packages.
 
 ## Run
 
@@ -46,7 +46,7 @@ The sibling apps [Stock Sync](../stocksync) and [Order Up](../orderup) sync by b
 - **Offline merges.** Someone who walks away and keeps typing comes back with a pile of edits made against an old version. Replaying them as messages does not produce what either person meant.
 - **Late joiners.** A newcomer needs the whole current document, not the stream of messages they missed, so a host has to build and send snapshots and reconcile them with edits in flight.
 
-Solving all of that by hand is building a CRDT. The SDK already ships one, the replicated document layer (`DataStore`, see the SDK's [`docs/data.md`](https://github.com/Offline-Protocol/offline-protocol-sdk/blob/v0.27.0/docs/data.md)), so Cowrite uses it and only turns keystrokes into edits.
+Solving all of that by hand is building a CRDT. The SDK already ships one, the replicated document layer (`DataStore`, see the SDK's [`docs/data.md`](https://github.com/Offline-Protocol/offline-protocol-sdk/blob/v0.28.0/docs/data.md)), so Cowrite uses it and only turns keystrokes into edits.
 
 ## How Cowrite uses DataStore
 

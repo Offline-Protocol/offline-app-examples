@@ -1,6 +1,6 @@
 # Event Floor
 
-Live-events demo app with **two flows** in one binary: **staff dispatch** when cell is saturated, and **gate admission sync** when scanners cannot reach the cloud. Everything runs over **Bluetooth mesh** (Mesh SDK 0.27) — no Wi‑Fi Direct payload, no accounts.
+Live-events demo app with **two flows** in one binary: **staff dispatch** when cell is saturated, and **gate admission sync** when scanners cannot reach the cloud. Everything runs over **Bluetooth mesh** (Mesh SDK 0.28) — no Wi‑Fi Direct payload, no accounts.
 
 Built on `@offline-app-examples/mesh` (rooms, MLS group mode, mesh relay) and `@offline-app-examples/ui`.
 

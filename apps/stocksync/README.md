@@ -6,7 +6,7 @@ One phone opens a store and the others nearby join it over Bluetooth. Everyone s
 same small supermarket inventory (milk, bread, apples, eggs, bananas, cheese, cereal,
 tomatoes), and tapping − or + on any phone updates the count on every phone. No internet,
 accounts or servers. Built on `@offline-app-examples/mesh` (a thin room layer over
-`@offline-protocol/mesh-sdk` 0.27, see `packages/mesh/README.md`) and
+`@offline-protocol/mesh-sdk` 0.28, see `packages/mesh/README.md`) and
 `@offline-app-examples/ui`.
 
 ## What it demonstrates
