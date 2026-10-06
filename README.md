@@ -19,6 +19,7 @@ accounts or server, and shows a different way to keep shared state in sync.
 | Cowrite | [`apps/cowrite`](./apps/cowrite) | Shared plain-text document with live cursors, built on the SDK's replicated documents (`DataStore`) in an MLS group. |
 | OutageNet | [`apps/outagenet`](./apps/outagenet) | Public-sector style outage coordination: status + handoff accept over Bluetooth, mock HQ sync with idempotent ingest. |
 | YardGate | [`apps/yardgate`](./apps/yardgate) | Logistics yard check-in: MeshServices discover + invoke, gate officer approve/deny, optional relay hop. |
+| Event Floor | [`apps/eventfloor`](./apps/eventfloor) | Live events: Flow A staff MLS dispatch + Flow B gate admission ledger and mock platform sync (`scanId` dedupe). |
 
 Each app's README explains how to run it, how its sync works and what its tests cover.
 
@@ -77,7 +78,11 @@ pnpm --filter @offline-app-examples/stocksync ios -- --device
 pnpm --filter @offline-app-examples/stocksync android
 ```
 
-Replace `stocksync` with `tictactogether`, `orderup`, `cowrite`, `outagenet`, or `yardgate` for the other apps.
+Replace `stocksync` with `tictactogether`, `orderup`, `cowrite`, `outagenet`, `yardgate`, or `eventfloor` for the other apps.
+
+### Event Floor
+
+Record `demo-staff.gif` and `demo-gate.gif` in [`apps/eventfloor`](./apps/eventfloor) and embed here when catalogue-ready (see app README).
 For iOS you can also open the app's `ios/*.xcworkspace` in Xcode, choose your team
 under Signing & Capabilities, and run on each phone. Debug builds load JavaScript
 from Metro; install a Release build to use an app away from your computer.
