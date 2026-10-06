@@ -20,6 +20,7 @@ accounts or server, and shows a different way to keep shared state in sync.
 | OutageNet | [`apps/outagenet`](./apps/outagenet) | Public-sector style outage coordination: status + handoff accept over Bluetooth, mock HQ sync with idempotent ingest. |
 | YardGate | [`apps/yardgate`](./apps/yardgate) | Logistics yard check-in: MeshServices discover + invoke, gate officer approve/deny, optional relay hop. |
 | Event Floor | [`apps/eventfloor`](./apps/eventfloor) | Live events: Flow A staff MLS dispatch + Flow B gate admission ledger and mock platform sync (`scanId` dedupe). |
+| AgriMesh | [`apps/agrimesh`](./apps/agrimesh) | Agriculture: field readings store-and-forward over multi-hop Bluetooth mesh, office-edge ledger, mock farm sync (`readingId` dedupe). |
 
 Each app's README explains how to run it, how its sync works and what its tests cover.
 
@@ -78,7 +79,7 @@ pnpm --filter @offline-app-examples/stocksync ios -- --device
 pnpm --filter @offline-app-examples/stocksync android
 ```
 
-Replace `stocksync` with `tictactogether`, `orderup`, `cowrite`, `outagenet`, `yardgate`, or `eventfloor` for the other apps.
+Replace `stocksync` with `tictactogether`, `orderup`, `cowrite`, `outagenet`, `yardgate`, `eventfloor`, or `agrimesh` for the other apps.
 
 ### Event Floor
 

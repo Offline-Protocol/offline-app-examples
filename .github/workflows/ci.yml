@@ -49,7 +49,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [tictactogether, stocksync, orderup, cowrite, outagenet, yardgate, eventfloor]
+        app: [tictactogether, stocksync, orderup, cowrite, outagenet, yardgate, eventfloor, agrimesh]
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -89,6 +89,8 @@ jobs:
             scheme: YardGate
           - app: eventfloor
             scheme: EventFloor
+          - app: agrimesh
+            scheme: AgriMesh
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
