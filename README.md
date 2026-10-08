@@ -48,10 +48,6 @@ Each app's README explains how to run it, how its sync works and what its tests 
 
 ![YardGate demo: Android and iOS yard check-in with gate officer approve/deny over Bluetooth mesh](./apps/yardgate/demo.gif)
 
-### Event Floor
-
-Record `demo-staff.gif` and `demo-gate.gif` in [`apps/eventfloor`](./apps/eventfloor) and embed here when catalogue-ready (see app README).
-
 ### AgriMesh
 
 ![AgriMesh demo: Android office edge and iOS field collector with readings over Bluetooth mesh](./apps/agrimesh/demo.gif)
