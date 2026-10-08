@@ -52,6 +52,12 @@ Each app's README explains how to run it, how its sync works and what its tests 
 
 ![AgriMesh demo: Android office edge and iOS field collector with readings over Bluetooth mesh](./apps/agrimesh/demo.gif)
 
+### Event Floor
+
+![Event Floor Flow B — Android lead scanner and iOS gate scanner syncing gate admissions over Bluetooth mesh](./apps/eventfloor/demo-gate.gif)
+
+![Event Floor Flow B — iOS gate scanner (ticket scans and duplicate detection)](./apps/eventfloor/demo-staff.gif)
+
 ## Shared packages
 
 | Package | Path | Description |

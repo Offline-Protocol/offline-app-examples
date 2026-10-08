@@ -2,6 +2,7 @@ import { Button, cn, Icon, PersonAvatar, Text } from '@offline-app-examples/ui';
 import { LogOut } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type Person = { id: string; name: string };
 
@@ -40,6 +41,34 @@ export function TopBar({
         <Text>Leave</Text>
       </Button>
     </View>
+  );
+}
+
+export function ConnectingScreen({
+  title = 'Connecting…',
+  message,
+  error,
+  onLeave,
+}: {
+  title?: string;
+  message?: string;
+  error?: string;
+  onLeave: () => void;
+}) {
+  return (
+    <SafeAreaView className="bg-background flex-1" edges={['top', 'left', 'right']}>
+      <View className="border-foreground flex-row justify-end border-b-2 px-5 pb-3 pt-2">
+        <Button variant="outline" size="sm" onPress={onLeave}>
+          <Text>Leave</Text>
+        </Button>
+      </View>
+      <View className="flex-1 items-center justify-center px-8">
+        <Text className="font-serif text-center text-2xl">{error ? 'Could not connect' : title}</Text>
+        <Text className="text-muted-foreground mt-3 text-center text-base leading-6">
+          {error ?? message ?? 'Turn on Bluetooth and keep devices in range.'}
+        </Text>
+      </View>
+    </SafeAreaView>
   );
 }
 

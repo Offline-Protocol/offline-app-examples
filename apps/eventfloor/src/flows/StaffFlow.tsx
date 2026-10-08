@@ -6,6 +6,7 @@ import {
   type StaffAlert,
   type StaffSession,
 } from '../domain/staff';
+import { ConnectingScreen } from '../ui/common';
 import { RelayScreen } from '../ui/RelayScreen';
 import { StaffReceiverScreen } from '../ui/StaffReceiverScreen';
 import { StaffSenderScreen } from '../ui/StaffSenderScreen';
@@ -156,5 +157,29 @@ export function StaffFlow({
     );
   }
 
-  return null;
+  const leaveSession = () => {
+    void room.leave();
+    onLeave();
+  };
+
+  let message = 'Turn on Bluetooth and keep devices in range.';
+  if (role === 'sender') {
+    message = 'Starting the staff channel…';
+  } else if (role === 'receiver') {
+    if (room.status === 'discovering' && room.hosts.length === 0) {
+      message = 'Looking for the staff sender nearby. Start the sender on another phone first.';
+    } else if (room.status === 'joining') {
+      message = 'Joining the staff channel…';
+    } else {
+      message = 'Connecting to staff dispatch…';
+    }
+  }
+
+  return (
+    <ConnectingScreen
+      message={message}
+      error={room.status === 'error' ? room.error : undefined}
+      onLeave={leaveSession}
+    />
+  );
 }

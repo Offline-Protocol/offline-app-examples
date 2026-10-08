@@ -15,6 +15,7 @@ import {
 import { ingestToPlatform, unsyncedScanIds } from '../domain/platform';
 import { DEMO_EVENT } from '../domain/tickets';
 import { loadPersisted, savePersisted, sanitizeHost, sanitizeScanner } from '../services/persist';
+import { ConnectingScreen } from '../ui/common';
 import { HostGateScreen } from '../ui/HostGateScreen';
 import { RelayScreen } from '../ui/RelayScreen';
 import { ScannerGateScreen } from '../ui/ScannerGateScreen';
@@ -271,5 +272,29 @@ export function GateFlow({
     );
   }
 
-  return null;
+  const leaveSession = () => {
+    void room.leave();
+    onLeave();
+  };
+
+  let message = 'Turn on Bluetooth and keep devices in range.';
+  if (role === 'host') {
+    message = 'Starting the lead scanner and advertising over Bluetooth…';
+  } else if (role === 'scanner') {
+    if (room.status === 'discovering' && room.hosts.length === 0) {
+      message = 'Looking for the lead scanner nearby. Start the lead gate on another phone first.';
+    } else if (room.status === 'joining') {
+      message = 'Joining the lead scanner…';
+    } else {
+      message = 'Connecting to the lead scanner…';
+    }
+  }
+
+  return (
+    <ConnectingScreen
+      message={message}
+      error={room.status === 'error' ? room.error : undefined}
+      onLeave={leaveSession}
+    />
+  );
 }
