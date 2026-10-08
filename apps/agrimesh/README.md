@@ -4,6 +4,8 @@ Agriculture demo: **store-and-forward** field readings over **Bluetooth mesh** u
 
 Built on `@offline-app-examples/mesh` (nearby rooms, mesh relay) and `@offline-app-examples/ui`.
 
+![AgriMesh demo: Android office edge and iOS field collector](./demo.gif)
+
 ## Roles
 
 | Role | Device | Behavior |
@@ -42,10 +44,6 @@ Use **physical phones** with Bluetooth on. Debug builds need Metro.
 ## Reset
 
 Clear app data or reinstall. Seeded plots and reading templates are fixed in `src/domain/plots.ts`.
-
-## Catalogue GIF
-
-Add `demo.gif` in this folder after recording on devices (root README embed when ready).
 
 ## Tests
 

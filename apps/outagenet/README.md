@@ -4,6 +4,8 @@ Field coordination when towers are down. One phone runs the **command post**; ot
 
 Built on `@offline-app-examples/mesh` and `@offline-app-examples/ui`, Mesh SDK 0.28.
 
+![OutageNet demo: Android field unit and iOS command post](./demo.gif)
+
 ## What it demonstrates
 
 - Host-authoritative ops log with **stable `operationId`** on every record (retries and mesh resends dedupe).
