@@ -40,6 +40,24 @@ Each app's README explains how to run it, how its sync works and what its tests 
 
 ![Tic Tac Together demo: iOS and Android playing a game over Bluetooth](./apps/tictactogether/demo.gif)
 
+### OutageNet
+
+![OutageNet demo: Android field unit and iOS command post coordinating over Bluetooth mesh](./apps/outagenet/demo.gif)
+
+### YardGate
+
+![YardGate demo: Android and iOS yard check-in with gate officer approve/deny over Bluetooth mesh](./apps/yardgate/demo.gif)
+
+### AgriMesh
+
+![AgriMesh demo: Android office edge and iOS field collector with readings over Bluetooth mesh](./apps/agrimesh/demo.gif)
+
+### Event Floor
+
+![Event Floor Flow B — Android lead scanner and iOS gate scanner syncing gate admissions over Bluetooth mesh](./apps/eventfloor/demo-gate.gif)
+
+![Event Floor Flow B — iOS gate scanner (ticket scans and duplicate detection)](./apps/eventfloor/demo-staff.gif)
+
 ## Shared packages
 
 | Package | Path | Description |
@@ -81,9 +99,6 @@ pnpm --filter @offline-app-examples/stocksync android
 
 Replace `stocksync` with `tictactogether`, `orderup`, `cowrite`, `outagenet`, `yardgate`, `eventfloor`, or `agrimesh` for the other apps.
 
-### Event Floor
-
-Record `demo-staff.gif` and `demo-gate.gif` in [`apps/eventfloor`](./apps/eventfloor) and embed here when catalogue-ready (see app README).
 For iOS you can also open the app's `ios/*.xcworkspace` in Xcode, choose your team
 under Signing & Capabilities, and run on each phone. Debug builds load JavaScript
 from Metro; install a Release build to use an app away from your computer.

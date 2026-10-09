@@ -4,6 +4,8 @@ Logistics yard check-in when there is no cellular: a **driver** discovers a **ga
 
 Mesh SDK **0.28** — `MeshServices` discover + invoke only (no Proof of Location; invoke bodies are signed plaintext — no secrets). Service responses use SDK status strings **`ok`**, **`error`**, or **`not_found`** (not HTTP codes like `200`).
 
+![YardGate demo: Android and iOS yard check-in over Bluetooth mesh](./demo.gif)
+
 ## What it demonstrates
 
 - **`yardgate-gate` service** — register on the gate device, discover from the driver (multi-hop when relay is in the middle).

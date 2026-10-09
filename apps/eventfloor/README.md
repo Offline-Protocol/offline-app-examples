@@ -4,6 +4,10 @@ Live-events demo app with **two flows** in one binary: **staff dispatch** when c
 
 Built on `@offline-app-examples/mesh` (rooms, MLS group mode, mesh relay) and `@offline-app-examples/ui`.
 
+![Event Floor Flow B — Android lead scanner and iOS gate scanner over Bluetooth mesh](./demo-gate.gif)
+
+![Event Floor Flow B — iOS gate scanner (ticket scans and duplicate detection)](./demo-staff.gif)
+
 ## Flow A — Staff dispatch
 
 - **Staff sender** hosts an MLS **group** room and broadcasts encrypted staff alerts (demo roster + PIN stand in for OfflineID sign-in).
@@ -55,10 +59,6 @@ Use **physical phones** with Bluetooth on. Debug builds need Metro.
 ## Reset
 
 Clear app data or reinstall. Seeded tickets and staff PINs are fixed in `src/domain/`.
-
-## Catalogue GIFs
-
-Add `demo-staff.gif` and `demo-gate.gif` in this folder after recording on devices (root README embeds them).
 
 ## Tests
 
