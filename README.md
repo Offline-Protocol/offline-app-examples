@@ -21,6 +21,7 @@ accounts or server, and shows a different way to keep shared state in sync.
 | YardGate | [`apps/yardgate`](./apps/yardgate) | Logistics yard check-in: MeshServices discover + invoke, gate officer approve/deny, optional relay hop. |
 | Event Floor | [`apps/eventfloor`](./apps/eventfloor) | Live events: Flow A staff MLS dispatch + Flow B gate admission ledger and mock platform sync (`scanId` dedupe). |
 | AgriMesh | [`apps/agrimesh`](./apps/agrimesh) | Agriculture: field readings store-and-forward over multi-hop Bluetooth mesh, office-edge ledger, mock farm sync (`readingId` dedupe). |
+| DockHand | [`apps/dockhand`](./apps/dockhand) | Fleet yards: driver check-in and signed dock assignment over Bluetooth, synced to MyGeotab when online (`handoffId` dedupe, GO GPS fix, verifying Add-In page). |
 
 Each app's README explains how to run it, how its sync works and what its tests cover.
 
@@ -77,6 +78,8 @@ Each app's README explains how to run it, how its sync works and what its tests 
 
 No API key or developer portal account is needed to run these examples. They
 use only nearby Bluetooth: the SDK's internet transports and telemetry stay off.
+DockHand can also sign in to a MyGeotab database to sync completed handoffs;
+without one it runs fully offline with a mock sync.
 
 ## Run an app
 
@@ -97,7 +100,7 @@ pnpm --filter @offline-app-examples/stocksync ios -- --device
 pnpm --filter @offline-app-examples/stocksync android
 ```
 
-Replace `stocksync` with `tictactogether`, `orderup`, `cowrite`, `outagenet`, `yardgate`, `eventfloor`, or `agrimesh` for the other apps.
+Replace `stocksync` with `tictactogether`, `orderup`, `cowrite`, `outagenet`, `yardgate`, `eventfloor`, `agrimesh`, or `dockhand` for the other apps.
 
 For iOS you can also open the app's `ios/*.xcworkspace` in Xcode, choose your team
 under Signing & Capabilities, and run on each phone. Debug builds load JavaScript
