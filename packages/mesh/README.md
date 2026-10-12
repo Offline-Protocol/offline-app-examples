@@ -43,6 +43,14 @@ room.broadcast({ type: 'snapshot', items });
    `onPeerJoined`) as soon as it is heard from again. That is why host-authoritative
    apps should answer `onPeerJoined` with a full snapshot.
 
+## Signing
+
+`sign(text)` signs with the device's mesh identity key (Ed25519) and returns
+`{ publicKey, signature }` as hex. `verify(address, text, signed)` is true only if the
+signature is valid and the key is the identity key of `address`, so a peer cannot
+sign with a fresh key and claim to be someone else. Use it for records that must stay
+provable after they leave the room, such as a signed handoff receipt.
+
 ## Group mode (`{ group: true }`)
 
 For the SDK's replicated documents (`DataStore`), which live in an MLS group.
@@ -82,4 +90,5 @@ await store.textInsert(room.groupId!, 'doc', 'body', 0, 'Hello');
 | `src/useNearbyRoom.ts` | React hook around one `NearbyRoom` |
 | `src/hosts.ts` | Pure host-list logic (tested) |
 | `src/envelope.ts` | Message envelope encode/decode with the size bound (tested) |
+| `src/signing.ts` | Hex and UTF-8 helpers for `sign` / `verify` (tested) |
 | `src/permissions.ts` | Android Bluetooth permissions |

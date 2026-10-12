@@ -8,6 +8,7 @@ export {
   type NearbyHost,
 } from './hosts';
 export { requestNearbyPermissions } from './permissions';
+export { fromHex, toHex, type Signed } from './signing';
 export { bluetoothMeshProtocolConfig, pause, poll, waitForBluetooth } from './runtime';
 export { useMeshRelay } from './useMeshRelay';
 export type { RelaySnapshot, RelayStatus } from './relaySession';
