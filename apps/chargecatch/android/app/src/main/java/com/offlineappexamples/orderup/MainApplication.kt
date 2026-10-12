@@ -1,4 +1,4 @@
-package com.offlineappexamples.agrimesh
+package com.offlineappexamples.chargecatch
 
 import android.app.Application
 import com.facebook.react.PackageList

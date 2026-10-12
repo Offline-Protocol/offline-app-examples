@@ -1,5 +1,11 @@
 import { findCard, type ChargerId } from './cards';
 
+function secureRandomHex(byteLength: number): string {
+  const bytes = new Uint8Array(byteLength);
+  globalThis.crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
 export type ChargeSession = {
   sessionId: string;
   siteId: string;
@@ -68,7 +74,7 @@ export const emptyCharger = (): ChargerState => ({
 });
 
 export function newSessionId(): string {
-  return `ses-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  return `ses-${Date.now().toString(36)}-${secureRandomHex(4)}`;
 }
 
 export function snapshotOf(state: HubState): MeshMessage {

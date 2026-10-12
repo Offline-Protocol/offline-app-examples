@@ -1,4 +1,4 @@
-package com.offlineappexamples.agrimesh
+package com.offlineappexamples.chargecatch
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

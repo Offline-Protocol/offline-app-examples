@@ -1,8 +1,21 @@
 import { describe, expect, it } from '@jest/globals';
 import { ingestToCms } from '../src/domain/cms';
-import { buildSession, hubReducer, emptyHub, parseMeshMessage } from '../src/domain/sessions';
+import {
+  buildSession,
+  hubReducer,
+  emptyHub,
+  newSessionId,
+  parseMeshMessage,
+} from '../src/domain/sessions';
 
 describe('charge sessions', () => {
+  it('uses secure random session ids', () => {
+    const a = newSessionId();
+    const b = newSessionId();
+    expect(a).toMatch(/^ses-[a-z0-9]+-[0-9a-f]{8}$/);
+    expect(b).not.toBe(a);
+  });
+
   it('builds session for seeded card', () => {
     const built = buildSession({
       siteId: 'site-demo-north',
