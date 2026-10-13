@@ -21,6 +21,7 @@ accounts or server, and shows a different way to keep shared state in sync.
 | YardGate | [`apps/yardgate`](./apps/yardgate) | Logistics yard check-in: MeshServices discover + invoke, gate officer approve/deny, optional relay hop. |
 | Event Floor | [`apps/eventfloor`](./apps/eventfloor) | Live events: Flow A staff MLS dispatch + Flow B gate admission ledger and mock platform sync (`scanId` dedupe). |
 | AgriMesh | [`apps/agrimesh`](./apps/agrimesh) | Agriculture: field readings store-and-forward over multi-hop Bluetooth mesh, office-edge ledger, mock farm sync (`readingId` dedupe). |
+| ChargeCatch | [`apps/chargecatch`](./apps/chargecatch) | EV charge site: local session ledger on charge points, site hub over Bluetooth mesh, mock CMS reconciliation when head office link returns (`sessionId` dedupe). |
 
 Each app's README explains how to run it, how its sync works and what its tests cover.
 
@@ -97,7 +98,7 @@ pnpm --filter @offline-app-examples/stocksync ios -- --device
 pnpm --filter @offline-app-examples/stocksync android
 ```
 
-Replace `stocksync` with `tictactogether`, `orderup`, `cowrite`, `outagenet`, `yardgate`, `eventfloor`, or `agrimesh` for the other apps.
+Replace `stocksync` with `tictactogether`, `orderup`, `cowrite`, `outagenet`, `yardgate`, `eventfloor`, `agrimesh`, or `chargecatch` for the other apps.
 
 For iOS you can also open the app's `ios/*.xcworkspace` in Xcode, choose your team
 under Signing & Capabilities, and run on each phone. Debug builds load JavaScript
