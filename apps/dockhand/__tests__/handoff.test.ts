@@ -46,7 +46,7 @@ describe('signed texts', () => {
       checkInText(handoff({ vehicle: { id: 'b2', name: 'Truck 12' } })),
     ).not.toBe(checkInText(h));
     const text = assignmentText(h, assignment);
-    expect(text).toContain(checkInText(h).replace(/"/g, '\\"'));
+    expect(JSON.parse(text)[1]).toBe(checkInText(h));
     expect(
       assignmentText(handoff({ driverSig: sig('c') }), assignment),
     ).not.toBe(text);
