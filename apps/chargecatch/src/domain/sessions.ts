@@ -1,9 +1,12 @@
 import { findCard, type ChargerId } from './cards';
 
-function secureRandomHex(byteLength: number): string {
-  const bytes = new Uint8Array(byteLength);
-  globalThis.crypto.getRandomValues(bytes);
-  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+/** Demo idempotency keys — unique per process without native crypto (CMS dedupe). */
+let sessionSeq = 0;
+
+function sessionIdSuffix(): string {
+  sessionSeq += 1;
+  const mix = (Date.now() * 31 + sessionSeq * 997) >>> 0;
+  return mix.toString(16).padStart(8, '0');
 }
 
 export type ChargeSession = {
@@ -74,7 +77,7 @@ export const emptyCharger = (): ChargerState => ({
 });
 
 export function newSessionId(): string {
-  return `ses-${Date.now().toString(36)}-${secureRandomHex(4)}`;
+  return `ses-${Date.now().toString(36)}-${sessionIdSuffix()}`;
 }
 
 export function snapshotOf(state: HubState): MeshMessage {
