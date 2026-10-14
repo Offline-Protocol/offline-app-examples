@@ -49,7 +49,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [tictactogether, stocksync, orderup, cowrite, outagenet, yardgate, eventfloor, agrimesh, dockhand]
+        app: [tictactogether, stocksync, orderup, cowrite, outagenet, yardgate, eventfloor, agrimesh, chargecatch, surfrroll, dockhand]
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -62,10 +62,30 @@ jobs:
           distribution: temurin
           java-version: 17
           cache: gradle
+          # One cache key per app — avoids matrix jobs overwriting the same Gradle
+          # cache while Reanimated/Worklets prefab packages are half-built.
+          cache-dependency-path: |
+            apps/${{ matrix.app }}/android/**/*.gradle*
+            apps/${{ matrix.app }}/android/gradle/wrapper/gradle-wrapper.properties
       - run: pnpm install --frozen-lockfile
       - name: Build debug APK
         working-directory: apps/${{ matrix.app }}/android
-        run: ./gradlew assembleDebug -PreactNativeArchitectures=x86_64 --no-daemon
+        run: |
+          GRADLE=(./gradlew -PreactNativeArchitectures=x86_64 --no-daemon)
+          # Prefab packages must exist before :app:configureCMakeDebug (Reanimated race).
+          PREFAB=(
+            :react-native-worklets:prefabDebugPackage
+            :react-native-reanimated:prefabDebugPackage
+          )
+          for attempt in 1 2 3; do
+            if "${GRADLE[@]}" "${PREFAB[@]}" assembleDebug; then
+              exit 0
+            fi
+            echo "::warning::assembleDebug failed (attempt $attempt), clearing app native build dirs"
+            rm -rf app/build app/.cxx
+            sleep $((attempt * 10))
+          done
+          exit 1
 
   ios:
     needs: check
@@ -91,6 +111,10 @@ jobs:
             scheme: EventFloor
           - app: agrimesh
             scheme: AgriMesh
+          - app: chargecatch
+            scheme: ChargeCatch
+          - app: surfrroll
+            scheme: SurfrRoll
           - app: dockhand
             scheme: DockHand
     steps:
