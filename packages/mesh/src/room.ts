@@ -16,6 +16,7 @@ import {
 } from './hosts';
 import { requestNearbyPermissions } from './permissions';
 import { bluetoothMeshProtocolConfig, pause, poll, waitForBluetooth } from './runtime';
+import { fromHex, toHex, utf8, type Signed } from './signing';
 
 export type RoomStatus =
   | 'idle' // nothing running
@@ -175,6 +176,32 @@ export class NearbyRoom {
   broadcast = async (data: unknown): Promise<void> => {
     const content = encodeEnvelope({ t: 'app', d: data }, MAX_MESSAGE_BYTES);
     await Promise.all(this.snapshot.peers.map(peer => this.sendRaw(peer.id, content)));
+  };
+
+  /** Signs `text` with this device's mesh identity key (Ed25519). */
+  sign = async (text: string): Promise<Signed> => {
+    const p = this.protocol;
+    if (!p) throw new Error('The room is not running.');
+    const [publicKey, signature] = await Promise.all([p.getIdentityPublicKey(), p.signData(utf8(text))]);
+    return { publicKey: toHex(publicKey), signature: toHex(signature) };
+  };
+
+  /**
+   * True only if `signed` is a valid signature over `text` AND its key is the identity
+   * key of `address`. Without the address check, any peer could sign with a fresh key
+   * and claim to be someone else.
+   */
+  verify = async (address: string, text: string, signed: Signed): Promise<boolean> => {
+    const p = this.protocol;
+    const publicKey = fromHex(signed.publicKey);
+    const signature = fromHex(signed.signature);
+    if (!p || publicKey?.length !== 32 || signature?.length !== 64) return false;
+    try {
+      if ((await p.deriveAddress(publicKey)) !== address) return false;
+      return await p.verifySignature(publicKey, utf8(text), signature);
+    } catch {
+      return false;
+    }
   };
 
   /** Says goodbye to peers, stops the protocol and returns to 'idle'. */
