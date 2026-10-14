@@ -42,14 +42,41 @@ jobs:
             done
           done
 
+  # Native builds only for apps a PR touches. Pushes to main, and PRs that touch
+  # anything outside apps/ (lockfile, packages/, CI), build every app.
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      apps: ${{ steps.apps.outputs.apps }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # The PR merge commit plus its parents, so HEAD^1..HEAD is the PR's diff.
+          fetch-depth: 2
+      - id: apps
+        run: |
+          all=$(ls apps | jq -Rsc 'split("\n") | map(select(length > 0))')
+          apps=$all
+          if [ "${{ github.event_name }}" = pull_request ]; then
+            files=$(git diff --name-only HEAD^1 HEAD | grep -vE '^docs/|\.(md|gif|png|jpe?g)$' || true)
+            if [ -z "$files" ]; then
+              apps='[]'
+            elif ! grep -qv '^apps/' <<<"$files"; then
+              apps=$(grep '^apps/' <<<"$files" | cut -d/ -f2 \
+                | jq -Rsc --argjson all "$all" 'split("\n") | unique | map(select(IN($all[])))')
+            fi
+          fi
+          echo "apps=$apps" | tee -a "$GITHUB_OUTPUT"
+
   android:
-    needs: check
+    needs: [check, changes]
+    if: needs.changes.outputs.apps != '[]'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
-        app: [tictactogether, stocksync, orderup, cowrite, outagenet, yardgate, eventfloor, agrimesh, chargecatch, surfrroll]
+        app: ${{ fromJSON(needs.changes.outputs.apps) }}
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -88,33 +115,14 @@ jobs:
           exit 1
 
   ios:
-    needs: check
+    needs: [check, changes]
+    if: needs.changes.outputs.apps != '[]'
     runs-on: macos-15
     timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - app: tictactogether
-            scheme: Tictactogether
-          - app: stocksync
-            scheme: StockSync
-          - app: orderup
-            scheme: OrderUp
-          - app: cowrite
-            scheme: Cowrite
-          - app: outagenet
-            scheme: OutageNet
-          - app: yardgate
-            scheme: YardGate
-          - app: eventfloor
-            scheme: EventFloor
-          - app: agrimesh
-            scheme: AgriMesh
-          - app: chargecatch
-            scheme: ChargeCatch
-          - app: surfrroll
-            scheme: SurfrRoll
+        app: ${{ fromJSON(needs.changes.outputs.apps) }}
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -151,6 +159,17 @@ jobs:
       - name: Build for the iOS simulator
         working-directory: apps/${{ matrix.app }}/ios
         run: |
-          xcodebuild -workspace "${{ matrix.scheme }}.xcworkspace" -scheme "${{ matrix.scheme }}" \
+          scheme=$(basename *.xcworkspace .xcworkspace)
+          xcodebuild -workspace "$scheme.xcworkspace" -scheme "$scheme" \
             -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
             -derivedDataPath "$RUNNER_TEMP/dd" CODE_SIGNING_ALLOWED=NO -quiet build
+
+  # Single required check for the native builds, since the matrix varies per PR.
+  native:
+    if: always()
+    needs: [check, changes, android, ios]
+    runs-on: ubuntu-latest
+    steps:
+      - if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: exit 1
+      - run: echo "native builds passed or were not needed"
