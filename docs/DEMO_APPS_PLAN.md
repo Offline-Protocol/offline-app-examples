@@ -74,7 +74,7 @@ Planning only — no app scaffolds until implementation starts.
 | **A — Staff ops** | Event organiser | MLS staff group + OfflineID; dispatch over crowd relay (relay cannot read) |
 | **B — Gate sync** | Ticketing / gate POS | Shared **admission ledger** across scanners; idempotent mock platform ingest |
 
-**Catalogue bar (Satvik / Mizan parity):** End-to-end RN app, seeded reset, README scripts, **`demo-staff.gif`** + **`demo-gate.gif`**, root README embeds, CI matrix row.
+**Catalogue bar (Satvik / Mizan parity):** End-to-end RN app, seeded reset, README scripts, **`demo-staff.gif`** + **`demo-gate.gif`**, root README embeds (CI picks up new apps automatically; see the top of `.github/workflows/ci.yml`).
 
 **Flow A (short):** Security sends “Medic, Section B”; staff receiver gets it on **Bluetooth mesh** when cell is saturated; optional third phone relays.
 
