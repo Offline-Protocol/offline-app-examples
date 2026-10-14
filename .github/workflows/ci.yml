@@ -1,3 +1,23 @@
+# CI for every app under apps/.
+#
+# Don't list apps in this file. The `changes` job reads apps/ and picks which
+# apps to run:
+#   - PR touching only apps/<name>/ -> just those apps
+#   - PR touching anything else (lockfile, packages/, this file, root config)
+#     -> every app
+#   - PR touching only docs (docs/, *.md, images) -> nothing
+#   - push to main -> every app
+#
+# `check` (typecheck, lint, test, JS bundle), `android` and `ios` all run for
+# that list. A new app is picked up automatically, as long as:
+#   - apps/<name>/package.json is named @offline-app-examples/<name>
+#   - apps/<name>/ios has exactly one <Scheme>.xcworkspace whose scheme has
+#     the same name
+#
+# Branch protection should only require `check` and `native`, never per-app
+# job names like `android (cowrite)`. Those only exist on PRs that touch that
+# app. `native` rolls up all the android/ios jobs into one result.
+
 name: CI
 
 on:
@@ -16,8 +36,6 @@ env:
   TURBO_TELEMETRY_DISABLED: 1
 
 jobs:
-  # CI runs only for apps a PR touches. Pushes to main, and PRs that touch
-  # anything outside apps/ (lockfile, packages/, CI), check every app.
   changes:
     runs-on: ubuntu-latest
     outputs:
