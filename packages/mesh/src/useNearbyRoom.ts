@@ -26,6 +26,8 @@ export function useNearbyRoom(options: RoomOptions & RoomCallbacks) {
     join: room.join,
     send: room.send,
     broadcast: room.broadcast,
+    sign: room.sign,
+    verify: room.verify,
     leave: room.leave,
   };
 }
