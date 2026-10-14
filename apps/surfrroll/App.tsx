@@ -1,7 +1,7 @@
 import '@offline-app-examples/ui/global.css';
 import { Button, Text } from '@offline-app-examples/ui';
 import React, { useState } from 'react';
-import { Pressable, StatusBar, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StatusBar, TextInput, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { DEMO_CLIENT, EMPLOYEE_ROSTER, signInEmployee, type EmployeeSession } from './src/domain/roster';
 import { SurfrFlow, type SurfrRole } from './src/flows/SurfrFlow';
@@ -51,8 +51,13 @@ function HomeLobby({ onStart }: { onStart: (setup: Setup) => void }) {
   };
 
   return (
-    <SafeAreaView className="bg-background flex-1" edges={['top', 'left', 'right']}>
-      <View className="flex-1 px-6 pt-4">
+    <SafeAreaView className="bg-background flex-1" edges={['top', 'left', 'right', 'bottom']}>
+      <ScrollView
+        className="flex-1"
+        contentContainerClassName="px-6 pt-4 pb-10"
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator
+      >
         <Text className="font-serif text-4xl">SurfrRoll</Text>
         <Text className="text-muted-foreground mt-2 text-base leading-6">
           {DEMO_CLIENT.name} — last mile for MitKat DataSurfr. Signed incident alerts and employee roll
@@ -158,7 +163,7 @@ function HomeLobby({ onStart }: { onStart: (setup: Setup) => void }) {
         >
           <Text>Start</Text>
         </Button>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
