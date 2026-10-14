@@ -4,6 +4,8 @@ Driver to dock office handoffs with no signal, synced to **MyGeotab** when a pho
 
 Built on `@offline-app-examples/mesh` and `@offline-app-examples/ui`, Mesh SDK 0.28.
 
+![DockHand demo: Android dock office and iOS driver over Bluetooth](./demo.gif)
+
 ## What it demonstrates
 
 - **Offline handoff.** Check-in and dock assignment travel phone to phone over Bluetooth only. Check-ins are resent until the dock office acknowledges them, and every record has a stable `handoffId`, so resends never duplicate.

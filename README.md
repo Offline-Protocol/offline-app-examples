@@ -61,6 +61,10 @@ Each app's README explains how to run it, how its sync works and what its tests 
 
 ![Event Floor Flow B — iOS gate scanner (ticket scans and duplicate detection)](./apps/eventfloor/demo-staff.gif)
 
+### DockHand
+
+![DockHand demo: Android dock office and iOS driver handing off a signed dock assignment over Bluetooth, then syncing](./apps/dockhand/demo.gif)
+
 ## Shared packages
 
 | Package | Path | Description |
