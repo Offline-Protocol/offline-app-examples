@@ -1,15 +1,23 @@
 # CI for every app under apps/.
 #
-# Don't list apps in this file. The `changes` job reads apps/ and picks which
-# apps to run:
-#   - PR touching only apps/<name>/ -> just those apps
-#   - PR touching anything else (lockfile, packages/, this file, root config)
-#     -> every app
-#   - PR touching only docs (docs/, *.md, images) -> nothing
-#   - push to main -> every app
+# Don't list apps in this file. The `changes` job runs
+# .github/scripts/changed-apps.sh, which reads apps/ and picks the apps for
+# each job from the PR's changed files:
 #
-# `check` (typecheck, lint, test, JS bundle), `android` and `ios` all run for
-# that list. A new app is picked up automatically, as long as:
+#   `check` (typecheck, lint, test, JS bundle)
+#     - any file in apps/<name>/ -> that app
+#     - anything outside apps/ (packages/, lockfile, root config) -> every app
+#   `android` / `ios` (native builds; Debug builds don't bundle JS)
+#     - apps/<name>/android/, ios/, Gemfile*, package.json -> that app, that
+#       platform only
+#     - lockfile, root package.json, workspace config, .github/ -> every app
+#     - JS-only changes (src/, App.tsx, packages/) -> no native builds
+#
+# Docs-only PRs (docs/, *.md, images) run nothing. Pushes to main run
+# everything. To change these rules, edit the script and its test,
+# changed-apps.test.sh, which runs in the `changes` job.
+#
+# A new app is picked up automatically, as long as:
 #   - apps/<name>/package.json is named @offline-app-examples/<name>
 #   - apps/<name>/ios has exactly one <Scheme>.xcworkspace whose scheme has
 #     the same name
@@ -39,40 +47,31 @@ jobs:
   changes:
     runs-on: ubuntu-latest
     outputs:
-      apps: ${{ steps.apps.outputs.apps }}
+      js: ${{ steps.apps.outputs.js }}
+      android: ${{ steps.apps.outputs.android }}
+      ios: ${{ steps.apps.outputs.ios }}
       filter: ${{ steps.apps.outputs.filter }}
     steps:
       - uses: actions/checkout@v7
         with:
           # The PR merge commit plus its parents, so HEAD^1..HEAD is the PR's diff.
           fetch-depth: 2
+      - run: bash .github/scripts/changed-apps.test.sh
       - id: apps
         run: |
-          all=$(ls apps | jq -Rsc 'split("\n") | map(select(length > 0))')
-          apps=$all
           if [ "${{ github.event_name }}" = pull_request ]; then
-            files=$(git diff --name-only HEAD^1 HEAD | grep -vE '^docs/|\.(md|gif|png|jpe?g)$' || true)
-            if [ -z "$files" ]; then
-              apps='[]'
-            elif ! grep -qv '^apps/' <<<"$files"; then
-              apps=$(grep '^apps/' <<<"$files" | cut -d/ -f2 \
-                | jq -Rsc --argjson all "$all" 'split("\n") | unique | map(select(IN($all[])))')
-            fi
-          fi
-          echo "apps=$apps" | tee -a "$GITHUB_OUTPUT"
-          # No turbo filter when every app runs, so packages/ is checked too.
-          if [ "$apps" != "$all" ]; then
-            filter=$(jq -r 'map("--filter=@offline-app-examples/" + .) | join(" ")' <<<"$apps")
-          fi
-          echo "filter=${filter:-}" | tee -a "$GITHUB_OUTPUT"
+            git diff --name-only HEAD^1 HEAD | bash .github/scripts/changed-apps.sh
+          else
+            bash .github/scripts/changed-apps.sh all
+          fi | tee -a "$GITHUB_OUTPUT"
 
   check:
     needs: changes
-    if: needs.changes.outputs.apps != '[]'
+    if: needs.changes.outputs.js != '[]'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      APPS: ${{ needs.changes.outputs.apps }}
+      APPS: ${{ needs.changes.outputs.js }}
       FILTER: ${{ needs.changes.outputs.filter }}
     steps:
       - uses: actions/checkout@v7
@@ -99,13 +98,13 @@ jobs:
 
   android:
     needs: [check, changes]
-    if: needs.changes.outputs.apps != '[]'
+    if: needs.changes.outputs.android != '[]'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
-        app: ${{ fromJSON(needs.changes.outputs.apps) }}
+        app: ${{ fromJSON(needs.changes.outputs.android) }}
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -124,6 +123,21 @@ jobs:
             apps/${{ matrix.app }}/android/**/*.gradle*
             apps/${{ matrix.app }}/android/gradle/wrapper/gradle-wrapper.properties
       - run: pnpm install --frozen-lockfile
+      # Install the SDK packages up front. Left to Gradle, the NDK downloads
+      # mid-build, and a corrupt download ("Error on ZipFile unknown archive")
+      # fails every Gradle retry. Versions match apps/*/android/build.gradle.
+      - name: Install Android SDK packages
+        run: |
+          for attempt in 1 2 3; do
+            if yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install \
+              "ndk;27.1.12297006" "platforms;android-36" "build-tools;36.0.0" > /dev/null; then
+              exit 0
+            fi
+            echo "::warning::sdkmanager failed (attempt $attempt), clearing partial downloads"
+            rm -rf "$ANDROID_HOME/ndk/27.1.12297006" "$ANDROID_HOME/.temp" "$ANDROID_HOME/.downloadIntermediates"
+            sleep $((attempt * 10))
+          done
+          exit 1
       - name: Build debug APK
         working-directory: apps/${{ matrix.app }}/android
         run: |
@@ -145,13 +159,13 @@ jobs:
 
   ios:
     needs: [check, changes]
-    if: needs.changes.outputs.apps != '[]'
+    if: needs.changes.outputs.ios != '[]'
     runs-on: macos-15
     timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
-        app: ${{ fromJSON(needs.changes.outputs.apps) }}
+        app: ${{ fromJSON(needs.changes.outputs.ios) }}
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -191,11 +205,14 @@ jobs:
           scheme=$(basename *.xcworkspace .xcworkspace)
           xcodebuild -workspace "$scheme.xcworkspace" -scheme "$scheme" \
             -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
-            -derivedDataPath "$RUNNER_TEMP/dd" CODE_SIGNING_ALLOWED=NO -quiet build
+            -derivedDataPath "$RUNNER_TEMP/dd" CODE_SIGNING_ALLOWED=NO \
+            ONLY_ACTIVE_ARCH=YES ARCHS=arm64 COMPILER_INDEX_STORE_ENABLE=NO -quiet build
 
   # Single required check for the native builds, since the matrix varies per PR.
+  # Skipped when the run itself is cancelled (a newer push superseded it), but a
+  # single job that is cancelled, such as by its timeout, still fails it.
   native:
-    if: always()
+    if: ${{ !cancelled() }}
     needs: [check, changes, android, ios]
     runs-on: ubuntu-latest
     steps:
