@@ -1,6 +1,6 @@
 # SurfrRoll
 
-**MitKat DataSurfr “last mile” demo** for [MitKat Advisory](https://mitkatadvisory.com/): signed incident alerts and employee roll call reach staff over **Bluetooth mesh** when cell and internet fail, then reconcile to a mock **DataSurfr / SOC** ingest when the cloud link returns. Mesh SDK **0.28**.
+**MitKat DataSurfr “last mile” demo** for [MitKat Advisory](https://mitkatadvisory.com/): signed incident alerts and employee roll call reach staff over **Bluetooth mesh** when cell and internet fail, then reconcile to a mock **DataSurfr / SOC** ingest when the cloud link returns. Mesh SDK **0.30**.
 
 Built on `@offline-app-examples/mesh` and `@offline-app-examples/ui`.
 

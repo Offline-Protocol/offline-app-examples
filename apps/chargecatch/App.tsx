@@ -52,7 +52,7 @@ function HomeLobby({ onStart }: { onStart: (setup: Setup) => void }) {
         <Text className="text-muted-foreground mt-2 text-base leading-6">
           {DEMO_SITE.name} — charge sessions stay on devices when head office is offline, hop to the
           site hub over Bluetooth mesh, then reconcile to a mock CMS when connectivity returns (SDK
-          0.28).
+          0.30).
         </Text>
         <View className="my-6 items-center">
           <ChargeHero size={160} />

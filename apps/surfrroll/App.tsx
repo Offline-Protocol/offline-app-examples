@@ -62,7 +62,7 @@ function HomeLobby({ onStart }: { onStart: (setup: Setup) => void }) {
         <Text className="text-muted-foreground mt-2 text-base leading-6">
           {DEMO_CLIENT.name} — last mile for MitKat DataSurfr. Signed incident alerts and employee roll
           call hop over Bluetooth mesh when cell and internet fail; check-ins reconcile to a mock SOC
-          when the cloud link returns (SDK 0.28).
+          when the cloud link returns (SDK 0.30).
         </Text>
         <View className="my-6 items-center">
           <SurfrHero size={160} />
