@@ -2,7 +2,7 @@
 
 Driver to dock office handoffs with no signal, synced to **MyGeotab** when a phone is back online. A **driver** checks in with load details over **Bluetooth**; the **dock office** assigns a dock; both phones sign, so the handoff is a receipt neither side can change afterwards. When either phone reaches the internet, the handoff is written to MyGeotab as Add-In data, next to the GPS fix the vehicle's GO device logged at check-in. No GO hardware changes.
 
-Built on `@offline-app-examples/mesh` and `@offline-app-examples/ui`, Mesh SDK 0.28.
+Built on `@offline-app-examples/mesh` and `@offline-app-examples/ui`, Mesh SDK 0.30.
 
 ![DockHand demo: Android dock office and iOS driver over Bluetooth](./demo.gif)
 

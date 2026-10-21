@@ -1,6 +1,6 @@
 # ChargeCatch
 
-EV-style **charge site demo**: sessions are recorded on charge points when **head office** is offline, collected on a **site hub** over **Bluetooth mesh**, then **reconciled once** to a mock CMS when connectivity returns. Matches the adoption story behind local session cache + upload on reconnect (SDK 0.28).
+EV-style **charge site demo**: sessions are recorded on charge points when **head office** is offline, collected on a **site hub** over **Bluetooth mesh**, then **reconciled once** to a mock CMS when connectivity returns. Matches the adoption story behind local session cache + upload on reconnect (SDK 0.30).
 
 Built on `@offline-app-examples/mesh` and `@offline-app-examples/ui`.
 

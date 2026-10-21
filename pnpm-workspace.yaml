@@ -2,4 +2,4 @@ packages:
   - "apps/*"
   - "packages/*"
 minimumReleaseAgeExclude:
-  - '@offline-protocol/mesh-sdk@0.28.0'
+  - '@offline-protocol/mesh-sdk@0.30.0'
