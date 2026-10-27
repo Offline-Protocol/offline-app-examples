@@ -26,12 +26,12 @@ import {
   unsynced,
 } from './src/domain/sync';
 import {
-  goFixesAround,
+  gpsFixesAround,
   listVehicles,
   pushHandoff,
   SessionExpired,
   signIn,
-} from './src/services/mygeotab';
+} from './src/services/fleetPlatform';
 import {
   emptyPersisted,
   loadPersisted,
@@ -39,7 +39,7 @@ import {
   type Persisted,
 } from './src/services/persist';
 import { DriverScreen } from './src/ui/DriverScreen';
-import { GeotabBar, GeotabSheet } from './src/ui/GeotabBar';
+import { FleetBar, FleetSheet } from './src/ui/FleetBar';
 import { DockHero } from './src/ui/illustrations';
 import { YardScreen } from './src/ui/YardScreen';
 
@@ -177,7 +177,7 @@ export default function App() {
   }
 
   /**
-   * Pushes completed handoffs to MyGeotab, or to the mock when not signed in.
+   * Pushes completed handoffs to Contoso Fleet, or to the mock when not signed in.
    * A manual sync with nothing new re-sends everything, to show the duplicate check.
    */
   async function sync(manual: boolean) {
@@ -216,7 +216,9 @@ export default function App() {
       for (const h of batch) {
         const fixes = isDemoVehicle(h.vehicle.id)
           ? []
-          : await goFixesAround(s, h.vehicle.id, h.checkedInAt).catch(() => []);
+          : await gpsFixesAround(s, h.vehicle.id, h.checkedInAt).catch(
+              () => [],
+            );
         const result = await pushHandoff(
           s,
           toDetails(h, nearestFix(fixes, h.checkedInAt)),
@@ -226,7 +228,7 @@ export default function App() {
         update({ syncedIds: synced([h.handoffId]) }); // per record, so a dropped connection loses nothing
       }
       update({
-        lastSync: { at: Date.now(), target: 'mygeotab', added, duplicates },
+        lastSync: { at: Date.now(), target: 'contosoFleet', added, duplicates },
       });
     } catch (e) {
       const expired = e instanceof SessionExpired;
@@ -235,7 +237,7 @@ export default function App() {
         session: expired ? null : ref.current.session,
         lastSync: {
           at: Date.now(),
-          target: 'mygeotab',
+          target: 'contosoFleet',
           added,
           duplicates,
           error: expired
@@ -253,7 +255,7 @@ export default function App() {
     }
   }
 
-  async function geotabSignIn(
+  async function fleetSignIn(
     server: string,
     database: string,
     user: string,
@@ -324,7 +326,7 @@ export default function App() {
     screen = (
       <NearbyLobby
         title="DockHand"
-        tagline="Drivers hand load details to the dock office over Bluetooth and get a signed dock assignment back, with no signal. Handoffs sync to MyGeotab when a phone is back online."
+        tagline="Drivers hand load details to the dock office over Bluetooth and get a signed dock assignment back, with no signal. Handoffs sync to Contoso Fleet when a phone is back online."
         illustration={<DockHero size={180} />}
         accentColor="#fbbf24"
         status={room.status}
@@ -362,7 +364,7 @@ export default function App() {
       <StatusBar barStyle="dark-content" />
       <View className="bg-background flex-1">
         <View className="flex-1">{screen}</View>
-        <GeotabBar
+        <FleetBar
           session={state.session}
           toSync={unsynced(state.handoffs, state.syncedIds).length}
           lastSync={state.lastSync}
@@ -371,11 +373,11 @@ export default function App() {
           onOpen={() => setSheetOpen(true)}
         />
       </View>
-      <GeotabSheet
+      <FleetSheet
         visible={sheetOpen}
         session={state.session}
         vehicleCount={state.vehicles.length}
-        onSignIn={geotabSignIn}
+        onSignIn={fleetSignIn}
         onSignOut={() => update({ session: null, vehicles: [], vehicleId: '' })}
         onClose={() => setSheetOpen(false)}
       />

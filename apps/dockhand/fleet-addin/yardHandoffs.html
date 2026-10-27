@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Yard Handoffs</title>
+    <style>
+      #yardHandoffs {
+        font-family: system-ui, sans-serif;
+        padding: 24px;
+        color: #111827;
+      }
+      #yardHandoffs h1 {
+        font-size: 22px;
+        margin: 0 0 4px;
+      }
+      #yardHandoffs p.lead {
+        color: #4b5563;
+        margin: 0 0 16px;
+      }
+      #yardHandoffs table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 13px;
+      }
+      #yardHandoffs th,
+      #yardHandoffs td {
+        border-bottom: 1px solid #e5e7eb;
+        padding: 8px;
+        text-align: left;
+        vertical-align: top;
+      }
+      #yardHandoffs th {
+        background: #f9fafb;
+        font-weight: 600;
+      }
+      #yardHandoffs .muted {
+        color: #6b7280;
+        font-size: 12px;
+      }
+      #yardHandoffs .sig.valid {
+        color: #047857;
+        font-weight: 600;
+      }
+      #yardHandoffs .sig.invalid {
+        color: #b91c1c;
+        font-weight: 600;
+      }
+      #yardHandoffs .sig.unsupported {
+        color: #92400e;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="yardHandoffs">
+      <h1>Yard Handoffs</h1>
+      <p class="lead">
+        Driver to dock office handoffs made offline in DockHand, each signed by
+        the driver's phone and countersigned by the yard, with the vehicle tracker's
+        GPS fix nearest to check-in.
+      </p>
+      <div id="yardHandoffs-list"></div>
+    </div>
+    <script src="yardHandoffs.js"></script>
+  </body>
+</html>

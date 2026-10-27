@@ -1,12 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { parseHandoff, type Handoff, type Vehicle } from '../domain/handoff';
-import type { Session } from './mygeotab';
+import type { Session } from './fleetPlatform';
 
 const KEY = '@dockhand/persist/v1';
 
 export type SyncReport = {
   at: number;
-  target: 'mygeotab' | 'mock';
+  target: 'contosoFleet' | 'mock';
   added: number;
   duplicates: number;
   error?: string;
@@ -15,11 +15,11 @@ export type SyncReport = {
 export type Persisted = {
   /** Yard: check-ins received. Driver: own check-ins. Both: what gets synced. */
   handoffs: Handoff[];
-  /** handoffIds this device has synced (to MyGeotab or the mock). */
+  /** handoffIds this device has synced (to Contoso Fleet or the mock). */
   syncedIds: string[];
   mockStored: string[];
   session: Session | null;
-  /** MyGeotab devices from the last sign-in. Empty means demo vehicles. */
+  /** Contoso Fleet devices from the last sign-in. Empty means demo vehicles. */
   vehicles: Vehicle[];
   vehicleId: string;
   lastSync: SyncReport | null;
