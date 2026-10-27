@@ -6,7 +6,7 @@
 // signature, so the pair is a receipt neither side can change afterwards.
 //
 // Every record carries a stable handoffId: mesh resends, repeat check-ins and
-// repeat syncs to MyGeotab all dedupe on it.
+// repeat syncs to Contoso Fleet all dedupe on it.
 
 import type { Signed } from '@offline-app-examples/mesh';
 
@@ -20,7 +20,7 @@ export const DOCKS = [
 ] as const;
 export type Dock = (typeof DOCKS)[number];
 
-/** A MyGeotab Device (id + name), or a demo vehicle when not signed in. */
+/** A Contoso Fleet Device (id + name), or a demo vehicle when not signed in. */
 export type Vehicle = { id: string; name: string };
 
 export type Load = {
@@ -230,7 +230,7 @@ export function parseHandoff(data: unknown): Handoff | null {
   };
 }
 
-/** Also guards the MyGeotab where clause, which interpolates this id. */
+/** Also guards the Contoso Fleet where clause, which interpolates this id. */
 export function isHandoffId(v: unknown): v is string {
   return typeof v === 'string' && /^[a-z0-9-]{1,48}$/.test(v);
 }

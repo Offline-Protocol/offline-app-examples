@@ -13,7 +13,7 @@ import {
   SessionExpired,
   signIn,
   type Session,
-} from '../src/services/mygeotab';
+} from '../src/services/fleetPlatform';
 
 const sig = (c: string) => ({
   publicKey: c.repeat(64),
@@ -43,7 +43,7 @@ describe('what gets synced', () => {
     expect(unsynced([done, waiting], ['ho-1'])).toEqual([]);
   });
 
-  it('fits a worst-case record under the AddInData limit', () => {
+  it('fits a worst-case record under the AddInRecord limit', () => {
     const long = 'W'.repeat(40);
     const big: Handoff = {
       ...done,
@@ -73,7 +73,7 @@ describe('what gets synced', () => {
     );
   });
 
-  it('takes the GO fix closest to check-in', () => {
+  it('takes the GPS fix closest to check-in', () => {
     const at = Date.parse('2026-10-12T10:00:00Z');
     const fix = (t: string) => ({ latitude: 1, longitude: 2, dateTime: t });
     expect(
@@ -106,8 +106,8 @@ describe('what gets synced', () => {
 
 type Call = { url: string; method: string; params: Record<string, any> };
 
-/** A fake MyGeotab: answers by method name and records every call. */
-function fakeGeotab(answer: (c: Call) => unknown) {
+/** A fake Contoso Fleet: answers by method name and records every call. */
+function fakeFleet(answer: (c: Call) => unknown) {
   const calls: Call[] = [];
   const fetchImpl = jest.fn(async (url: any, init: any) => {
     const { method, params } = JSON.parse(init.body);
@@ -119,45 +119,52 @@ function fakeGeotab(answer: (c: Call) => unknown) {
 }
 
 const session: Session = {
-  server: 'my3.geotab.com',
+  server: 'fleet3.contoso.example',
   credentials: { database: 'demo', userName: 'a@b.c', sessionId: 's1' },
 };
 
-describe('MyGeotab client', () => {
+describe('Contoso Fleet client', () => {
   it('signs in and follows the server named in path', async () => {
     const credentials = {
       database: 'demo',
       userName: 'a@b.c',
       sessionId: 's1',
     };
-    const moved = fakeGeotab(() => ({
-      result: { credentials, path: 'my3.geotab.com' },
+    const moved = fakeFleet(() => ({
+      result: { credentials, path: 'fleet3.contoso.example' },
     }));
     expect(
       await signIn(
-        'https://my.geotab.com/',
+        'https://fleet.contoso.example/',
         'demo',
         'a@b.c',
         'pw',
         moved.fetchImpl,
       ),
-    ).toEqual({ server: 'my3.geotab.com', credentials });
-    expect(moved.calls[0].url).toBe('https://my.geotab.com/apiv1');
+    ).toEqual({ server: 'fleet3.contoso.example', credentials });
+    expect(moved.calls[0].url).toBe('https://fleet.contoso.example/api');
     expect(moved.calls[0].method).toBe('Authenticate');
 
-    const here = fakeGeotab(() => ({
-      result: { credentials, path: 'ThisServer' },
+    const here = fakeFleet(() => ({
+      result: { credentials, path: 'self' },
     }));
     expect(
-      (await signIn('my.geotab.com', 'demo', 'a@b.c', 'pw', here.fetchImpl))
-        .server,
-    ).toBe('my.geotab.com');
-    expect(cleanServer('  ')).toBe('my.geotab.com');
+      (
+        await signIn(
+          'fleet.contoso.example',
+          'demo',
+          'a@b.c',
+          'pw',
+          here.fetchImpl,
+        )
+      ).server,
+    ).toBe('fleet.contoso.example');
+    expect(cleanServer('  ')).toBe('fleet.contoso.example');
   });
 
   it('adds a handoff once and reports the second push as a duplicate', async () => {
     const stored: unknown[] = [];
-    const geotab = fakeGeotab(({ method, params }) => {
+    const fleet = fakeFleet(({ method, params }) => {
       if (method === 'Get')
         return {
           result: stored.filter(
@@ -172,15 +179,15 @@ describe('MyGeotab client', () => {
       return { error: { message: 'unexpected' } };
     });
     const details = toDetails(done, null);
-    expect(await pushHandoff(session, details, geotab.fetchImpl)).toBe('added');
-    expect(await pushHandoff(session, details, geotab.fetchImpl)).toBe(
+    expect(await pushHandoff(session, details, fleet.fetchImpl)).toBe('added');
+    expect(await pushHandoff(session, details, fleet.fetchImpl)).toBe(
       'duplicate',
     );
     expect(stored).toHaveLength(1);
     expect(
-      geotab.calls.every(
+      fleet.calls.every(
         (c) =>
-          c.url === 'https://my3.geotab.com/apiv1' &&
+          c.url === 'https://fleet3.contoso.example/api' &&
           c.params.credentials.sessionId === 's1',
       ),
     ).toBe(true);
@@ -188,20 +195,20 @@ describe('MyGeotab client', () => {
       pushHandoff(
         session,
         { ...details, handoffId: 'x" or "1' },
-        geotab.fetchImpl,
+        fleet.fetchImpl,
       ),
     ).rejects.toThrow(/Bad handoff id/);
   });
 
   it('turns an expired session into SessionExpired', async () => {
-    const geotab = fakeGeotab(() => ({
+    const fleet = fakeFleet(() => ({
       error: {
         message: 'x',
-        errors: [{ name: 'InvalidUserException', message: 'Invalid session' }],
+        errors: [{ name: 'InvalidSessionError', message: 'Invalid session' }],
       },
     }));
     await expect(
-      pushHandoff(session, toDetails(done, null), geotab.fetchImpl),
+      pushHandoff(session, toDetails(done, null), fleet.fetchImpl),
     ).rejects.toBeInstanceOf(SessionExpired);
   });
 });

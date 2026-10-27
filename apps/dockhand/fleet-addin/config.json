@@ -1,0 +1,12 @@
+{
+  "name": "Yard Handoffs",
+  "supportEmail": "support@offlineprotocol.com",
+  "version": "0.1.0",
+  "items": [
+    {
+      "url": "https://YOUR-HTTPS-HOST/yardHandoffs.html",
+      "path": "Activity/",
+      "menuName": { "en": "Yard Handoffs" }
+    }
+  ]
+}

@@ -1122,7 +1122,7 @@ importers:
         specifier: ^5.8.3
         version: 5.9.3
 
-  apps/surfrroll:
+  apps/saferoll:
     dependencies:
       '@offline-app-examples/mesh':
         specifier: workspace:*

@@ -7,10 +7,10 @@ import {
   type Handoff,
 } from '../src/domain/handoff';
 import { toDetails } from '../src/domain/sync';
-import { ADD_IN_ID } from '../src/services/mygeotab';
+import { ADD_IN_ID } from '../src/services/fleetPlatform';
 
-// The MyGeotab page is plain browser JavaScript; it exports for this test only.
-const addin = require('../mygeotab-addin/yardHandoffs.js');
+// The Contoso Fleet page is plain browser JavaScript; it exports for this test only.
+const addin = require('../fleet-addin/yardHandoffs.js');
 const subtle = webcrypto.subtle;
 
 async function signer() {
@@ -59,7 +59,7 @@ async function signedHandoff(): Promise<Handoff> {
   };
 }
 
-describe('MyGeotab page', () => {
+describe('Contoso Fleet page', () => {
   it('uses the same add-in id as the phones', () => {
     expect(addin.ADD_IN_ID).toBe(ADD_IN_ID);
   });
