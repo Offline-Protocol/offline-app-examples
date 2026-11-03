@@ -16,6 +16,8 @@ accounts or servers. Built on `@offline-app-examples/mesh` (a thin room layer ov
 - Validating everything that arrives from another device before using it.
 - Handling a flaky link: members keep working while the host is out of range, and get the
   full inventory again when it comes back.
+- Optional barcode scanning on Zebra Android devices through DataWedge, using the same op as a
+  tap (see [Zebra devices](#zebra-devices)).
 
 ## How sync works
 
@@ -25,7 +27,7 @@ below 0), bumps a revision number and broadcasts the whole inventory as a `snaps
 replace their state with any snapshot at least as new as the one they have, which confirms or
 corrects their early change, and ignore older ones that arrive late. The host also sends a
 snapshot whenever a member joins or comes back into range. A card flashes teal when a change
-from another phone lands.
+from another phone lands, or when you scan its barcode.
 
 ```
 member                         host                          other members
@@ -41,9 +43,12 @@ thirty lines of `App.tsx`.
 | File | What it does |
 | --- | --- |
 | `App.tsx` | Room wiring: who sends what, lobby vs. inventory |
-| `src/domain/stock.ts` | Products, reducer, wire messages and their validation (tested) |
-| `src/ui/inventory.tsx` | Inventory screen: header, reconnecting banner, product cards |
+| `src/domain/stock.ts` | Products and their barcodes, reducer, wire messages and their validation (tested) |
+| `src/scanner.ts` | `useScanner`: barcode scans from the native DataWedge module, if there is one |
+| `src/ui/inventory.tsx` | Inventory screen: header, reconnecting banner, scan notice, product cards |
 | `src/ui/illustrations.tsx` | Flat SVG product illustrations |
+| `android/.../DataWedgeModule.kt` | Android only: receives DataWedge scan broadcasts, sets up the DataWedge profile |
+| `zebra/` | Scan simulator and the Zebra deployment kit (see [Zebra devices](#zebra-devices)) |
 
 ## Run
 
@@ -82,6 +87,62 @@ find each other.
 4. Walk a member out of range: it shows "Reconnecting to store…" and catches up when it is back.
    **Close store** on the host ends the session for everyone.
 
+## Zebra devices
+
+On Zebra Android devices, scanning an item's barcode adds one to it on every phone, exactly
+like tapping +. Taps still work everywhere, and on phones without a Zebra scanner (and on iOS)
+the app works as before.
+
+| Item | Barcode (EAN-13) |
+| --- | --- |
+| Milk | 2000000000015 |
+| Bread | 2000000000022 |
+| Apples | 2000000000039 |
+| Eggs | 2000000000046 |
+| Bananas | 2000000000053 |
+| Cheese | 2000000000060 |
+| Cereal | 2000000000077 |
+| Tomatoes | 2000000000084 |
+
+The codes use the GS1 in-store prefix 20, so they never match a real product. Print them with
+any EAN-13 label generator. A barcode that isn't in the table shows a short "Unknown barcode"
+message and changes nothing.
+
+**Scanner setup.** Nothing to do by hand. When the app starts on a device with
+[DataWedge](https://techdocs.zebra.com/datawedge/latest/guide/about/), it creates or updates a
+DataWedge profile named `StockSync` through the
+[SET_CONFIG](https://techdocs.zebra.com/datawedge/latest/guide/api/setconfig/) intent API:
+barcode input on, intent output on with action `com.offlineappexamples.stocksync.SCAN`
+delivered as a broadcast, keystroke output off, associated with the app. The inventory header
+then shows "Scanner ready". Several plugins in one SET_CONFIG call needs DataWedge 6.5 or later.
+
+**Without a Zebra device.** The app listens for that broadcast on any Android phone, so you can
+send the same intent DataWedge sends
+([intent output extras](https://techdocs.zebra.com/datawedge/latest/guide/output/intent/))
+with adb. Open a store first, then:
+
+```sh
+apps/stocksync/zebra/simulate-scan.sh 2000000000015
+# which runs:
+adb shell am broadcast -a com.offlineappexamples.stocksync.SCAN \
+  --es com.symbol.datawedge.data_string 2000000000015 \
+  --es com.symbol.datawedge.label_type LABEL-TYPE-EAN13 \
+  --es com.symbol.datawedge.source scanner
+```
+
+Milk goes up by one on every phone in the store. The "Scanner ready" line only appears where
+DataWedge is installed.
+
+**Deployment kit.** [`zebra/`](zebra/) has an MX XML profile for StageNow or an EMM that turns
+off battery optimisation for the app, pre-grants its Bluetooth, nearby Wi-Fi and location
+permissions, and turns Bluetooth, Location and Wi-Fi on, plus an optional allowlist profile.
+[`zebra/IT-GUIDE.md`](zebra/IT-GUIDE.md) explains what each setting is for and how to apply it.
+Each setting cites its Zebra TechDocs page, and the few that the docs don't settle are marked
+UNVERIFIED.
+
+The scanning code and the kit follow Zebra's published docs. They haven't been run on Zebra
+hardware yet, and this is not a Zebra-validated app.
+
 ## Checks
 
 ```sh
@@ -90,7 +151,8 @@ pnpm --filter @offline-app-examples/stocksync test
 pnpm --filter @offline-app-examples/stocksync lint
 ```
 
-The test covers the reducer and message validation, not the Bluetooth link.
+The tests cover the reducer, message validation and barcode-to-item mapping, not the Bluetooth
+link or the native scanner module.
 
 ## Licensing
 

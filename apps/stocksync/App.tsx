@@ -8,10 +8,12 @@ import {
   changedIds,
   INITIAL_STATE,
   parseMessage,
+  scanToAdjust,
   stockReducer,
   toSnapshot,
   type ProductId,
 } from './src/domain/stock';
+import { useScanner } from './src/scanner';
 import { StoreHero } from './src/ui/illustrations';
 import { InventoryScreen } from './src/ui/inventory';
 
@@ -24,6 +26,7 @@ export default function App() {
   const [flashes, setFlashes] = useState<Partial<Record<ProductId, number>>>(
     {},
   );
+  const [unknownScan, setUnknownScan] = useState<{ code: string } | null>(null);
 
   const flash = (ids: ProductId[]) =>
     setFlashes((prev) => {
@@ -89,6 +92,25 @@ export default function App() {
   };
 
   const inStore = room.status === 'hosting' || room.status === 'connected';
+
+  // A scan is a +1 tap on the product with that barcode, on whichever phone scanned it.
+  const hasScanner = useScanner((scan) => {
+    if (!inStore) return;
+    const op = scanToAdjust(scan.data);
+    if (!op) {
+      setUnknownScan({ code: scan.data.trim() }); // a new object, so a repeat resets the timer
+      return;
+    }
+    setUnknownScan(null);
+    adjust(op.productId, op.delta);
+    flash([op.productId]);
+  });
+  useEffect(() => {
+    if (!unknownScan) return;
+    const timer = setTimeout(() => setUnknownScan(null), 3000);
+    return () => clearTimeout(timer);
+  }, [unknownScan]);
+
   const me = {
     id: room.localId || 'me',
     name: room.role === 'host' ? storeName : name.trim() || 'Guest',
@@ -105,6 +127,8 @@ export default function App() {
           reconnecting={room.role === 'member' && room.peers.length === 0}
           stock={state.stock}
           flashes={flashes}
+          hasScanner={hasScanner}
+          unknownBarcode={unknownScan?.code ?? null}
           onAdjust={adjust}
           onLeave={room.leave}
         />

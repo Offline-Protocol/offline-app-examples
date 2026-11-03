@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Stock Sync: add the app to the AccessMgr app allowlist ("whitelist").
+
+  READ FIRST. https://techdocs.zebra.com/mx/accessmgr/
+  OperationMode 2 ("Single User with Whitelist") TURNS ON allowlisting. With it on, every
+  user app that is not on the list is prevented from running (system apps, such as
+  DataWedge, are not affected). Apply this file only if your devices already use
+  allowlisting, or you mean to turn it on and will list every other user app you need.
+  The parms only take effect with OperationMode 2, which is why it is set here.
+
+  AddPackagesAction 1 = "Add Specified Package(s)"; the app is allowed to run but not to
+  submit MX XML, which Stock Sync never does.
+  Signature verification (AppVerifySignMode) is left unchanged. If your allowlist verifies
+  signatures, also add the app's signature file with AddPackageSign.
+
+  Not applied to a Zebra device yet: test on one device first.
+-->
+<wap-provisioningdoc>
+  <characteristic type="AccessMgr" version="4.3">
+    <parm name="OperationMode" value="2" />
+    <parm name="AddPackagesAction" value="1" />
+    <parm name="AddPackageNames" value="com.offlineappexamples.stocksync" />
+  </characteristic>
+
+  <!--
+    Only if your devices use a Bluetooth Manager app allowlist for BLE scans (App Config
+    Mode "Enable Allowlist"): add Stock Sync with BLE scan allowed, or it cannot find
+    other phones. https://techdocs.zebra.com/mx/bluetoothmgr/
+    AppConfigMode 2 = Enable Allowlist, AppConfigAllowListAction 0 = Add to Allowlist,
+    AppConfigAllowOperationBleScan 1 = checked (MX 13.4+, Android 11+, SDM660 / 2290 /
+    4490 / 6375 / 6490 platforms only, per TechDocs).
+    On Professional-series devices, Bluetooth Manager features need a Mobility DNA
+    Enterprise license (https://techdocs.zebra.com/licensing/).
+    UNVERIFIED: the version attribute.
+
+  <characteristic type="BluetoothMgr" version="13.4">
+    <parm name="AppConfigMode" value="2" />
+    <parm name="AppConfigAllowListAction" value="0" />
+    <parm name="AppConfigAllowOperationBleScan" value="1" />
+    <parm name="AppConfigAllowListPackages" value="com.offlineappexamples.stocksync" />
+  </characteristic>
+  -->
+</wap-provisioningdoc>

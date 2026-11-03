@@ -1,18 +1,25 @@
-// Inventory state and the two wire messages. Pure: no React, no SDK.
+// Inventory state, the two wire messages and barcode lookup. Pure: no React, no SDK.
 //
 // The host is the authority. Members send `adjust` ops; the host applies them,
 // bumps `rev` and broadcasts a full `snapshot`. Members apply their own taps
 // right away ('predict') and let the next snapshot confirm or correct them.
 
+// Each product has a shelf-label barcode: an EAN-13 in the GS1 in-store range
+// (prefix 20), so it can't clash with a real retail product's barcode.
 export const PRODUCTS = [
-  { id: 'milk', name: 'Milk', unit: 'cartons' },
-  { id: 'bread', name: 'Bread', unit: 'loaves' },
-  { id: 'apples', name: 'Apples', unit: 'bags' },
-  { id: 'eggs', name: 'Eggs', unit: 'boxes' },
-  { id: 'bananas', name: 'Bananas', unit: 'bunches' },
-  { id: 'cheese', name: 'Cheese', unit: 'blocks' },
-  { id: 'cereal', name: 'Cereal', unit: 'boxes' },
-  { id: 'tomatoes', name: 'Tomatoes', unit: 'crates' },
+  { id: 'milk', name: 'Milk', unit: 'cartons', barcode: '2000000000015' },
+  { id: 'bread', name: 'Bread', unit: 'loaves', barcode: '2000000000022' },
+  { id: 'apples', name: 'Apples', unit: 'bags', barcode: '2000000000039' },
+  { id: 'eggs', name: 'Eggs', unit: 'boxes', barcode: '2000000000046' },
+  { id: 'bananas', name: 'Bananas', unit: 'bunches', barcode: '2000000000053' },
+  { id: 'cheese', name: 'Cheese', unit: 'blocks', barcode: '2000000000060' },
+  { id: 'cereal', name: 'Cereal', unit: 'boxes', barcode: '2000000000077' },
+  {
+    id: 'tomatoes',
+    name: 'Tomatoes',
+    unit: 'crates',
+    barcode: '2000000000084',
+  },
 ] as const;
 
 export type ProductId = (typeof PRODUCTS)[number]['id'];
@@ -119,6 +126,16 @@ export function parseMessage(data: unknown): StockMessage | null {
     return { type: 'snapshot', rev: m.rev, stock };
   }
   return null;
+}
+
+/**
+ * A barcode scan is a +1 tap: the same `adjust` op, so it goes through the host like
+ * any other change. Null for a barcode that isn't on any product.
+ */
+export function scanToAdjust(barcode: string): AdjustMessage | null {
+  const code = barcode.trim();
+  const product = PRODUCTS.find((p) => p.barcode === code);
+  return product ? { type: 'adjust', productId: product.id, delta: 1 } : null;
 }
 
 /** Products whose quantity differs between two stocks. */

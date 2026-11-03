@@ -43,8 +43,12 @@ type Props = {
   /** Member only: the host is out of range. */
   reconnecting: boolean;
   stock: Stock;
-  /** Bumped per product when a change from another device lands. */
+  /** Bumped per product when a change from another device lands, or on a scan. */
   flashes: Partial<Record<ProductId, number>>;
+  /** A Zebra scanner is set up on this device (DataWedge). */
+  hasScanner: boolean;
+  /** The last scanned barcode that matched no product, shown briefly. */
+  unknownBarcode: string | null;
   onAdjust: (id: ProductId, delta: number) => void;
   onLeave: () => void;
 };
@@ -57,6 +61,8 @@ export function InventoryScreen(props: Props) {
     reconnecting,
     stock,
     flashes,
+    hasScanner,
+    unknownBarcode,
     onAdjust,
     onLeave,
   } = props;
@@ -115,6 +121,17 @@ export function InventoryScreen(props: Props) {
               back.
             </Text>
           </View>
+        ) : null}
+        {unknownBarcode ? (
+          <View className="bg-sunny border-foreground rounded-md border-2 px-4 py-3">
+            <Text className="text-sm font-medium" numberOfLines={2}>
+              Unknown barcode {unknownBarcode}. Nothing changed.
+            </Text>
+          </View>
+        ) : hasScanner ? (
+          <Text className="text-muted-foreground text-sm font-medium">
+            Scanner ready: scan a shelf label to add one.
+          </Text>
         ) : null}
       </View>
       <ScrollView contentContainerClassName="flex-row flex-wrap justify-between gap-y-4 px-5 pb-6 pt-4">
