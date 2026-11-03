@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Stock Sync device setup for Zebra Android devices, as MX XML.
+
+  What it does, for the app com.offlineappexamples.stocksync:
+    (a) exempts it from battery optimisation (Doze and App Standby)
+    (b) pre-grants its runtime permissions (Bluetooth scan/connect/advertise,
+        nearby Wi-Fi devices, location) and stops Android revoking them
+    (c) turns Bluetooth, Location and Wi-Fi on
+  Allowlisting (d) is in stocksync-allowlist.xml, because turning it on blocks
+  every user app that is not on the list. See IT-GUIDE.md before applying either.
+
+  Every CSP and parm below comes from Zebra TechDocs (URL above each block).
+  Anything not confirmed there is marked UNVERIFIED. This profile has not been
+  applied to a Zebra device yet: test it on one device before a fleet rollout.
+
+  If you change the app's applicationId, replace com.offlineappexamples.stocksync
+  everywhere below.
+
+  UNVERIFIED: the characteristic `version` attributes. They are set to the lowest
+  MX version that supports every parm in the block, per TechDocs. StageNow writes
+  its own when you rebuild the profile there.
+-->
+<wap-provisioningdoc>
+
+  <!--
+    (a) Battery optimisation exemption.
+    https://techdocs.zebra.com/mx/appmgr/
+    Action "BatteryOptimization" (MX 7.0+). The parm for "Exclude App(s) from Battery
+    Optimization", i.e. "unrestricted by the power-saving features of Android Doze mode",
+    is RemovePackageNames. (AddPackageNames does the opposite: it makes apps "Optimized".)
+    UNVERIFIED: the same page's overview and example titles describe AddPackageNames as
+    adding to the exemption list, which contradicts the parameter table. This file follows
+    the parameter table. Check after applying: Settings > Apps > Stock Sync > Battery
+    should read Unrestricted, or `adb shell dumpsys deviceidle whitelist` should list the app.
+  -->
+  <characteristic type="AppMgr" version="7.0">
+    <parm name="Action" value="BatteryOptimization" />
+    <parm name="RemovePackageNames" value="com.offlineappexamples.stocksync" />
+  </characteristic>
+
+  <!--
+    (b) Pre-grant runtime permissions.
+    https://techdocs.zebra.com/mx/accessmgr/
+    PermissionAccessAction 1 = Allow. PermissionAccessPermissionName 9 = "All Dangerous
+    Permissions" (MX 13.1+, Android 11+): grants every dangerous permission the app declares
+    in its manifest. For Stock Sync that is BLUETOOTH_SCAN, BLUETOOTH_CONNECT,
+    BLUETOOTH_ADVERTISE, NEARBY_WIFI_DEVICES and ACCESS_FINE_LOCATION. AccessMgr has no
+    option for a single one of these permissions. On Android 10+ this can also pre-grant
+    for an app that is not installed yet.
+    UNVERIFIED: whether PermissionAccessSignature is required. TechDocs shows it whenever the
+    action is not "Do Nothing" but does not say it is mandatory. If the result XML reports an
+    error, add the app's signing certificate as a DER file (see "Zebra Signature Tools" on the
+    AccessMgr page) with the commented parm.
+  -->
+  <characteristic type="AccessMgr" version="13.1">
+    <parm name="PermissionAccessAction" value="1" />
+    <parm name="PermissionAccessPermissionName" value="9" />
+    <parm name="PermissionAccessPackageName" value="com.offlineappexamples.stocksync" />
+    <!-- <parm name="PermissionAccessSignature" value="/sdcard/stocksync-signature.der" /> UNVERIFIED value format -->
+  </characteristic>
+
+  <!--
+    Keep those grants: stop Android auto-revoking permissions of apps that go unused for a
+    while. https://techdocs.zebra.com/mx/accessmgr/
+    AutomaticPermissionControl 2 = Turn Off (MX 13.1+, Android 11+).
+  -->
+  <characteristic type="AccessMgr" version="13.1">
+    <parm name="AutomaticPermissionControl" value="2" />
+    <parm name="AutoPermissionControlPackageName" value="com.offlineappexamples.stocksync" />
+  </characteristic>
+
+  <!--
+    (c) Radios on.
+    https://techdocs.zebra.com/mx/wirelessmgr/
+    BluetoothState 1 = Turn On (MX 4.3+). Note TechDocs: an Enterprise Reset sets Bluetooth
+    back to off, so re-apply this profile after one.
+    LocationState 1 = Turn On (MX 10.4+, Android 10+). Android 11 and older only return
+    Bluetooth scan results while Location is on.
+    Do not set the separate "Bluetooth" parm to 2: on Android 8+ that turns the radio off.
+  -->
+  <characteristic type="WirelessMgr" version="10.4">
+    <parm name="BluetoothState" value="1" />
+    <parm name="LocationState" value="1" />
+  </characteristic>
+
+  <!--
+    Wi-Fi on, and on during sleep.
+    https://techdocs.zebra.com/mx/wifi/
+    WiFiAction 1 = Enable (turns the Wi-Fi radio on, MX 4.2+).
+    Wi-Fi during sleep: TechDocs says WifiSleepPolicy "cannot be configured in devices running
+    Android 8.x and higher; Oreo locks the Wi-Fi radio into the AlwaysOn setting", so there is
+    nothing to set on current devices. For Android 7 and older only, add:
+      <parm name="WifiSleepPolicy" value="0" />   (0 = AlwaysOn)
+    Stock Sync as shipped connects over Bluetooth only. Wi-Fi matters once you turn on the
+    mesh SDK's Wi-Fi transport.
+    UNVERIFIED: TechDocs has no XML example with WiFiAction, so its placement as a direct
+    child of the Wi-Fi characteristic (without the UseRegulatory / UseDiagnosticOptions /
+    UseAdvancedOptions parms its examples carry) is not confirmed. If it fails, set "Wi-Fi
+    Enable/Disable" in StageNow's Wi-Fi setting instead.
+  -->
+  <characteristic type="Wi-Fi" version="4.4">
+    <parm name="WiFiAction" value="1" />
+  </characteristic>
+
+</wap-provisioningdoc>
