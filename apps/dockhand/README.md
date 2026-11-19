@@ -4,7 +4,7 @@ Driver to dock office handoffs with no signal, synced to a fleet platform when a
 
 **Contoso Fleet** is a fictional fleet platform. The app syncs to a mock on the phone by default; the Contoso Fleet client shows the shape of a real integration (sign in, vehicles, GPS records, idempotent writes) and is tested against a fake server.
 
-Built on `@offline-app-examples/mesh` and `@offline-app-examples/ui`, Mesh SDK 0.28.
+Built on `@offline-app-examples/mesh` and `@offline-app-examples/ui`, Mesh SDK 0.34.
 
 ![DockHand demo: Android dock office and iOS driver over Bluetooth](./demo.gif)
 
