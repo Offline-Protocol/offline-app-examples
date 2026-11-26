@@ -1,6 +1,6 @@
 # SafeRoll
 
-**Northwind Alerts “last mile” demo** for Northwind Risk, a fictional risk advisory: signed incident alerts and employee roll call reach staff over **Bluetooth mesh** when cell and internet fail, then reconcile to a mock **Northwind Alerts / SOC** ingest when the cloud link returns. Mesh SDK **0.28**.
+**Northwind Alerts “last mile” demo** for Northwind Risk, a fictional risk advisory: signed incident alerts and employee roll call reach staff over **Bluetooth mesh** when cell and internet fail, then reconcile to a mock **Northwind Alerts / SOC** ingest when the cloud link returns. Mesh SDK **0.34**.
 
 Built on `@offline-app-examples/mesh` and `@offline-app-examples/ui`.
 
